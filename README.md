@@ -1,4 +1,4 @@
-# 🎟️ EVENTMANA - HỆ THỐNG QUẢN LÝ & ĐẶT VÉ SỰ KIỆN TRỰC TUYẾN
+# HỆ THỐNG QUẢN LÝ & ĐẶT VÉ SỰ KIỆN TRỰC TUYẾN
 
 > **Đồ án Công Nghệ Phần Mềm**  
 > **Công nghệ:** ASP.NET Core MVC (.NET 10), Entity Framework Core  
@@ -15,9 +15,6 @@
 | **2** | **Trương Minh Dương** | **Thành viên** | • Quản lý tài khoản người dùng, khóa/mở tài khoản: [`AdminController.cs`](Quan_ly_su_kien/Controllers/AdminController.cs)<br>• Bộ lọc & Tìm kiếm sự kiện nâng cao: [`HomeController.cs`](Quan_ly_su_kien/Controllers/HomeController.cs)<br>• Quản lý khách mời, diễn giả & Check-in QR: [`GuestsController.cs`](Quan_ly_su_kien/Controllers/GuestsController.cs)<br>• Quản lý hồ sơ cá nhân & Nhật ký hoạt động (Audit Log) |
 | **3** | **Bùi Thái Quý** | **Thành viên** | • Quản lý danh mục sự kiện (Categories): [`AdminController.cs`](Quan_ly_su_kien/Controllers/AdminController.cs)<br>• Quản lý loại vé & giá vé phát hành: [`TicketTypesController.cs`](Quan_ly_su_kien/Controllers/TicketTypesController.cs)<br>• Thống kê doanh thu & Báo cáo biểu đồ: `ReportsController.cs`<br>• Quản lý đánh giá/phản hồi sự kiện & Kiểm thử UI/UX |
 
----
-
-## 🏗️ CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT ARCHITECTURE)
 
 Dự án được tổ chức theo đúng chuẩn **ASP.NET Core MVC 3 lớp** để các thành viên khi clone về có thể làm việc song song mà không bị xung đột (conflict):
 
@@ -104,7 +101,7 @@ Quan_ly_su_kien/
 
 ---
 
-## 🌿 QUY TẮC PHỐI HỢP GIT & CODE CONVENTION
+QUY TẮC PHỐI HỢP GIT & CODE CONVENTION
 
 1. **Nhánh Git (Branches)**:
    - `main`: Nhánh chạy ổn định, chỉ merge khi tính năng đã hoàn thiện.
