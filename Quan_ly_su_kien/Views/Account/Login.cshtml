@@ -1,0 +1,150 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Đăng Nhập Tài Khoản";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center align-items-stretch g-4">
+        <!-- Cột Giới thiệu Nền tảng (Bên trái) -->
+        <div class="col-lg-5 d-none d-lg-block">
+            <div class="card border-0 h-100 p-5 text-white shadow-lg d-flex flex-column justify-content-between position-relative overflow-hidden" 
+                 style="background: linear-gradient(135deg, #1e3a8a 0%, #0d6efd 100%); border-radius: 1.5rem;">
+                <div>
+                    <div class="d-flex align-items-center mb-4">
+                        <span class="bg-white text-primary rounded-circle p-2 me-2 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-ticket-alt fs-5"></i>
+                        </span>
+                        <h4 class="fw-bold mb-0 text-white">EventMana</h4>
+                    </div>
+
+                    <h2 class="fw-bold mb-3 lh-sm">Kết Nối Đam Mê,<br>Bùng Nổ Mọi Khoảnh Khắc.</h2>
+                    <p class="text-white-50 mb-4">
+                        Tham gia vào hàng trăm sự kiện hấp dẫn mỗi tuần hoặc tạo và quản lý sự kiện của riêng bạn chỉ với vài cú nhấp chuột.
+                    </p>
+
+                    <ul class="list-unstyled text-white-50 small mb-0">
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="fas fa-check-circle text-warning me-2 fs-6"></i>
+                            <span class="text-white">Đặt vé điện tử nhanh chóng, thanh toán an toàn</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="fas fa-check-circle text-warning me-2 fs-6"></i>
+                            <span class="text-white">Check-in mã QR không chạm tiện lợi tại cửa</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-warning me-2 fs-6"></i>
+                            <span class="text-white">Công cụ quản lý & phân tích dữ liệu chuyên nghiệp</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="pt-4 border-top border-white border-opacity-25 small text-white-50">
+                    &copy; 2026 EventMana Platform. Đồng hành cùng bạn trên mọi hành trình trải nghiệm.
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Form Đăng Nhập (Bên phải) -->
+        <div class="col-lg-5 col-md-8">
+            <div class="card border-0 shadow-lg p-4 p-md-5 h-100 d-flex flex-column justify-content-between" style="border-radius: 1.5rem;">
+                <div>
+                    <div class="mb-4">
+                        <h3 class="fw-bold text-dark mb-1">Đăng Nhập</h3>
+                        <p class="text-muted small">Nhập thông tin tài khoản của bạn để tiếp tục</p>
+                    </div>
+
+                    <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="UserNameOrEmail" class="form-label fw-semibold text-secondary small"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-envelope"></i></span>
+                                <input asp-for="UserNameOrEmail" class="form-control border-start-0 ps-0" placeholder="admin hoặc email@domain.com" />
+                            </div>
+                            <span asp-validation-for="UserNameOrEmail" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label asp-for="Password" class="form-label fw-semibold text-secondary small"></label>
+                                <a href="#" class="text-primary small text-decoration-none">Quên mật khẩu?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-key"></i></span>
+                                <input asp-for="Password" class="form-control border-start-0 ps-0" placeholder="••••••••" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" asp-for="RememberMe" />
+                            <label class="form-check-label text-secondary small" asp-for="RememberMe">
+                                Duy trì đăng nhập trên thiết bị này
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-pill shadow-sm mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập
+                        </button>
+                    </form>
+
+                    <div class="text-center text-muted small mb-4">
+                        Chưa có tài khoản? 
+                        <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="fw-semibold text-primary text-decoration-none">
+                            Đăng ký tài khoản mới
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Accordion Tài khoản mẫu để kiểm thử nhanh -->
+                <div class="accordion accordion-flush mt-3" id="demoAccountsAccordion">
+                    <div class="accordion-item border-0 bg-light rounded-3">
+                        <h2 class="accordion-header" id="headingDemo">
+                            <button class="accordion-button collapsed bg-light rounded-3 py-2 px-3 small text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDemo">
+                                <i class="fas fa-id-badge text-primary me-2"></i>
+                                <span>Tài khoản trải nghiệm hệ thống</span>
+                            </button>
+                        </h2>
+                        <div id="collapseDemo" class="accordion-collapse collapse" data-bs-parent="#demoAccountsAccordion">
+                            <div class="accordion-body p-3 pt-0 small">
+                                <p class="text-muted mb-2" style="font-size: 0.8rem;">Bấm nhanh để đăng nhập thử nghiệm:</p>
+                                <div class="d-flex flex-column gap-2">
+                                    <form asp-controller="Account" asp-action="QuickLogin" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="roleName" value="Admin" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 text-start py-2 d-flex justify-content-between align-items-center">
+                                            <span><strong>Quản Trị Viên (Admin)</strong> - admin</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-controller="Account" asp-action="QuickLogin" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="roleName" value="Organizer" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning text-dark w-100 text-start py-2 d-flex justify-content-between align-items-center">
+                                            <span><strong>Ban Tổ Chức (Organizer)</strong> - truongminhduong</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-controller="Account" asp-action="QuickLogin" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="roleName" value="Attendee" />
+                                        <button type="submit" class="btn btn-sm btn-outline-info text-dark w-100 text-start py-2 d-flex justify-content-between align-items-center">
+                                            <span><strong>Người Tham Gia (Attendee)</strong> - buithaiquy</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

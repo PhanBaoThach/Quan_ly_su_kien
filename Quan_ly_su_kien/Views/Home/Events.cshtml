@@ -1,0 +1,144 @@
+@model IEnumerable<Event>
+@{
+    ViewData["Title"] = "Khám Phá Sự Kiện";
+    var categories = ViewBag.Categories as IEnumerable<Category> ?? new List<Category>();
+}
+
+<div class="bg-primary text-white py-4 shadow-sm mb-4">
+    <div class="container">
+        <h2 class="fw-bold mb-1"><i class="fas fa-calendar-check me-2"></i>Khám Phá Các Sự Kiện Sắp Diễn Ra</h2>
+        <p class="text-white-50 mb-0">Tìm kiếm và lọc sự kiện theo chủ đề, địa điểm và thời gian phù hợp với bạn.</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Bộ lọc & Tìm kiếm -->
+    <div class="card border-0 shadow-sm p-3 mb-4">
+        <form method="get" asp-controller="Home" asp-action="Events" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control border-start-0" placeholder="Tên sự kiện, địa điểm, từ khóa..." />
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <select name="categoryId" class="form-select">
+                    <option value="">-- Tất cả danh mục --</option>
+                    @foreach (var c in categories)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.SelectedCategoryId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="All" selected="@(ViewBag.SelectedStatus == "All" || string.IsNullOrEmpty(ViewBag.SelectedStatus))">-- Trạng thái --</option>
+                    <option value="Open" selected="@(ViewBag.SelectedStatus == "Open")">Đang mở vé</option>
+                    <option value="Draft" selected="@(ViewBag.SelectedStatus == "Draft")">Dự thảo</option>
+                    <option value="Completed" selected="@(ViewBag.SelectedStatus == "Completed")">Đã diễn ra</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                    <i class="fas fa-filter me-1"></i> Áp Dụng
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Danh sách sự kiện -->
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-search fs-1 mb-3"></i>
+                    <h4>Không tìm thấy sự kiện nào</h4>
+                    <p class="text-muted">Hãy thử thay đổi từ khóa hoặc bộ lọc danh mục.</p>
+                    <a asp-controller="Home" asp-action="Events" class="btn btn-outline-primary rounded-pill px-4">Xóa bộ lọc</a>
+                </div>
+            </div>
+        }
+        @foreach (var ev in Model)
+        {
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-hover h-100 border-0 shadow-sm overflow-hidden">
+                    <div class="position-relative">
+                        <img src="@(string.IsNullOrEmpty(ev.ImageUrl) ? "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&auto=format&fit=crop&q=80" : ev.ImageUrl)" 
+                             class="card-img-top object-fit-cover" 
+                             style="height: 200px;" 
+                             alt="@ev.Title" />
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-primary shadow-sm rounded-pill px-3 py-1">
+                                @(ev.Category?.Name ?? "Chung")
+                            </span>
+                        </div>
+                        <div class="position-absolute top-0 end-0 m-3">
+                            @if (ev.Status == "Open")
+                            {
+                                <span class="badge bg-success shadow-sm rounded-pill px-3 py-1">Đang mở vé</span>
+                            }
+                            else if (ev.Status == "Draft")
+                            {
+                                <span class="badge bg-secondary shadow-sm rounded-pill px-3 py-1">Dự thảo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info text-dark shadow-sm rounded-pill px-3 py-1">@ev.Status</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="text-muted small mb-2 d-flex align-items-center">
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            <span>@ev.StartDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+
+                        <h5 class="card-title fw-bold text-dark mb-2">
+                            <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="text-decoration-none text-dark hover-primary">
+                                @ev.Title
+                            </a>
+                        </h5>
+
+                        <p class="card-text text-muted small mb-3 flex-grow-1">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            @ev.Location
+                        </p>
+
+                        <hr class="my-3">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Giá vé từ:</small>
+                                @if (ev.TicketTypes.Any())
+                                {
+                                    var minPrice = ev.TicketTypes.Min(t => t.Price);
+                                    if (minPrice == 0)
+                                    {
+                                        <span class="fw-bold text-success fs-5">Miễn Phí</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-bold text-primary fs-5">@minPrice.ToString("N0") VNĐ</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="fw-bold text-success fs-5">Miễn Phí</span>
+                                }
+                            </div>
+                            <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+                                Chi Tiết <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+

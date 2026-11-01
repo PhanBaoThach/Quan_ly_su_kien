@@ -1,0 +1,123 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ Sơ Cá Nhân";
+}
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Cột thông tin thẻ tóm tắt -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 text-center">
+                <div class="avatar-circle mx-auto mb-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 80px; height: 80px; font-size: 2rem;">
+                    @((Model.FullName.Length > 0 ? Model.FullName.Substring(0, 1) : Model.UserName.Substring(0, 1)).ToUpper())
+                </div>
+                <h4 class="fw-bold mb-1 text-dark">@Model.FullName</h4>
+                <p class="text-muted small mb-2">@@@Model.UserName</p>
+                <div>
+                    @if (Model.CurrentRole == "Admin")
+                    {
+                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-shield-alt me-1"></i> Quản Trị Viên</span>
+                    }
+                    else if (Model.CurrentRole == "Organizer")
+                    {
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-bullhorn me-1"></i> Ban Tổ Chức</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fas fa-user me-1"></i> Người Tham Gia</span>
+                    }
+                </div>
+                <hr class="my-4">
+                <div class="text-start small text-muted">
+                    <div class="mb-2"><i class="fas fa-envelope text-primary me-2"></i> @Model.Email</div>
+                    <div class="mb-2"><i class="fas fa-phone text-primary me-2"></i> @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Chưa cập nhật SĐT" : Model.PhoneNumber)</div>
+                    <div><i class="fas fa-calendar-alt text-primary me-2"></i> Ngày tham gia: @Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột chỉnh sửa & đổi mật khẩu -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4">
+                <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-pane">
+                            <i class="fas fa-user-edit me-2"></i>Thông Tin Cá Nhân
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password-pane">
+                            <i class="fas fa-key me-2"></i>Đổi Mật Khẩu
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="profileTabContent">
+                    <!-- Tab Thông tin cá nhân -->
+                    <div class="tab-pane fade show active" id="info-pane">
+                        <form asp-controller="Account" asp-action="UpdateProfile" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="Id" />
+                            <input type="hidden" asp-for="UserName" />
+                            <input type="hidden" asp-for="Email" />
+                            <input type="hidden" asp-for="CurrentRole" />
+                            <input type="hidden" asp-for="CreatedAt" />
+
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label fw-semibold small text-secondary"></label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label fw-semibold small text-secondary"></label>
+                                    <input asp-for="Email" class="form-control bg-light" readonly />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="PhoneNumber" class="form-label fw-semibold small text-secondary"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="0987654321" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-save me-2"></i>Lưu Thay Đổi
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Tab Đổi mật khẩu -->
+                    <div class="tab-pane fade" id="password-pane">
+                        <form asp-controller="Account" asp-action="ChangePassword" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mật khẩu hiện tại</label>
+                                <input type="password" name="CurrentPassword" class="form-control" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mật khẩu mới</label>
+                                <input type="password" name="NewPassword" class="form-control" required />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold small text-secondary">Xác nhận mật khẩu mới</label>
+                                <input type="password" name="ConfirmPassword" class="form-control" required />
+                            </div>
+
+                            <button type="submit" class="btn btn-warning text-dark rounded-pill px-4">
+                                <i class="fas fa-shield-alt me-2"></i>Cập Nhật Mật Khẩu
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

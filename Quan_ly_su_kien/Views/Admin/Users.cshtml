@@ -1,0 +1,262 @@
+@model IEnumerable<UserManagementViewModel>
+@{
+    ViewData["Title"] = "Quản Lý Tài Khoản Người Dùng";
+}
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Index">Quản trị</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Tài Khoản</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="fas fa-users-cog text-primary me-2"></i>Quản Lý Tài Khoản & Phân Quyền
+            </h2>
+            <p class="text-muted small mb-0">Tạo tài khoản mới, cập nhật thông tin cá nhân, phân vai trò và kiểm soát khóa/mở khóa</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <i class="fas fa-user-plus me-2"></i>Thêm Tài Khoản Mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Thanh Tìm kiếm & Bộ lọc Role -->
+    <div class="card border-0 shadow-sm p-3 mb-4">
+        <form method="get" asp-controller="Admin" asp-action="Users" class="row g-2 align-items-center">
+            <div class="col-md-6 col-lg-7">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control border-start-0" placeholder="Tìm kiếm theo tên, username, email..." />
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <select name="roleFilter" class="form-select">
+                    <option value="All" selected="@(ViewBag.RoleFilter == "All" || string.IsNullOrEmpty(ViewBag.RoleFilter))">-- Tất cả vai trò --</option>
+                    <option value="Admin" selected="@(ViewBag.RoleFilter == "Admin")">Quản Trị Viên (Admin)</option>
+                    <option value="Organizer" selected="@(ViewBag.RoleFilter == "Organizer")">Ban Tổ Chức (Organizer)</option>
+                    <option value="Attendee" selected="@(ViewBag.RoleFilter == "Attendee")">Thành Viên (Attendee)</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-lg-2">
+                <button type="submit" class="btn btn-dark w-100 rounded-pill">
+                    <i class="fas fa-filter me-1"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bảng danh sách Tài khoản -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Họ và tên</th>
+                        <th>Tên đăng nhập / Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Vai trò (Role)</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-user-slash fs-3 d-block mb-2"></i>
+                                Không tìm thấy tài khoản người dùng nào phù hợp.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 bg-light text-primary border rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
+                                        @((user.FullName.Length > 0 ? user.FullName.Substring(0, 1) : user.UserName.Substring(0, 1)).ToUpper())
+                                    </div>
+                                    <div class="fw-bold text-dark">@user.FullName</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div><span class="text-secondary fw-semibold">@@@user.UserName</span></div>
+                                <small class="text-muted">@user.Email</small>
+                            </td>
+                            <td>@(string.IsNullOrEmpty(user.PhoneNumber) ? "-" : user.PhoneNumber)</td>
+                            <td>
+                                @if (user.Role == "Admin")
+                                {
+                                    <span class="badge bg-danger rounded-pill px-3 py-1"><i class="fas fa-shield-alt me-1"></i>Admin</span>
+                                }
+                                else if (user.Role == "Organizer")
+                                {
+                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="fas fa-bullhorn me-1"></i>Ban Tổ Chức</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark rounded-pill px-3 py-1"><i class="fas fa-user me-1"></i>Thành Viên</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="fas fa-check-circle me-1"></i>Đang hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="fas fa-lock me-1"></i>Đã bị khóa
+                                    </span>
+                                }
+                            </td>
+                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end pe-4">
+                                <div class="d-inline-flex gap-1">
+                                    <!-- Nút Sửa -->
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editUserModal-@user.Id"
+                                            title="Chỉnh sửa thông tin">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <!-- Nút Khóa / Mở Khóa -->
+                                    <form asp-controller="Admin" asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning text-dark" : "btn-outline-success") rounded-circle" 
+                                                title="@(user.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")"
+                                                onclick="return confirm('Bạn có chắc muốn @(user.IsActive ? "khóa" : "mở khóa") tài khoản @user.UserName?');">
+                                            <i class="fas @(user.IsActive ? "fa-lock" : "fa-unlock")"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Nút Xóa -->
+                                    <form asp-controller="Admin" asp-action="DeleteUser" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" 
+                                                title="Xóa tài khoản"
+                                                onclick="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản @user.UserName?');">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Modal Chỉnh sửa người dùng -->
+                                <div class="modal fade" id="editUserModal-@user.Id" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog text-start">
+                                        <div class="modal-content border-0 shadow">
+                                            <form asp-controller="Admin" asp-action="EditUser" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="Id" value="@user.Id" />
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold">Chỉnh Sửa Tài Khoản: @user.UserName</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small">Họ và tên</label>
+                                                        <input type="text" name="FullName" value="@user.FullName" class="form-control" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small">Email</label>
+                                                        <input type="email" name="Email" value="@user.Email" class="form-control" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small">Số điện thoại</label>
+                                                        <input type="text" name="PhoneNumber" value="@user.PhoneNumber" class="form-control" />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold small">Phân quyền Vai trò (Role)</label>
+                                                        <select name="Role" class="form-select">
+                                                            <option value="Admin" selected="@(user.Role == "Admin")">Quản Trị Viên (Admin)</option>
+                                                            <option value="Organizer" selected="@(user.Role == "Organizer")">Ban Tổ Chức (Organizer)</option>
+                                                            <option value="Attendee" selected="@(user.Role == "Attendee")">Thành Viên (Attendee)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-check form-switch mb-2">
+                                                        <input class="form-check-input" type="checkbox" name="IsActive" value="true" @(user.IsActive ? "checked" : "") id="activeSwitch-@user.Id">
+                                                        <input type="hidden" name="IsActive" value="false" />
+                                                        <label class="form-check-label fw-semibold small" for="activeSwitch-@user.Id">Kích hoạt hoạt động</label>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary rounded-pill">Lưu Thay Đổi</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Tài Khoản Mới -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <form asp-controller="Admin" asp-action="CreateUser" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fas fa-user-plus text-primary me-2"></i>Thêm Mới Tài Khoản
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" name="FullName" class="form-control" placeholder="Nguyễn Văn A" required />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input type="text" name="UserName" class="form-control" placeholder="nguyenvana" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Số điện thoại</label>
+                            <input type="text" name="PhoneNumber" class="form-control" placeholder="0987654321" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="Email" class="form-control" placeholder="email@example.com" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                        <input type="password" name="Password" class="form-control" placeholder="••••••••" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Phân quyền Vai trò (Role) <span class="text-danger">*</span></label>
+                        <select name="Role" class="form-select" required>
+                            <option value="Attendee">Thành Viên (Attendee)</option>
+                            <option value="Organizer">Ban Tổ Chức (Organizer)</option>
+                            <option value="Admin">Quản Trị Viên (Admin)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">Tạo Tài Khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,270 @@
+@model IEnumerable<Event>
+@{
+    ViewData["Title"] = "Trang Chủ - Nền Tảng Quản Lý & Đặt Vé Sự Kiện EventMana";
+    var categories = ViewBag.Categories as IEnumerable<Category> ?? new List<Category>();
+}
+
+<!-- Hero Section Hiện Đại Chuẩn Thương Mại -->
+<section class="hero-banner py-5 shadow-sm">
+    <div class="container py-4 py-lg-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7 text-center text-lg-start">
+                <div class="d-inline-flex align-items-center bg-white bg-opacity-10 rounded-pill px-3 py-1 mb-3 backdrop-blur">
+                    <span class="badge bg-warning text-dark rounded-pill me-2"><i class="fas fa-bolt me-1"></i> Xu Hướng</span>
+                    <span class="small text-light">Nền tảng kết nối sự kiện trực tuyến hàng đầu</span>
+                </div>
+                <h1 class="display-4 fw-extrabold text-white mb-3 lh-sm">
+                    Khám Phá & Đặt Vé Sự Kiện Dễ Dàng Cùng <span class="text-warning">EventMana</span>
+                </h1>
+                <p class="lead text-white-50 mb-4">
+                    Giải pháp công nghệ toàn diện cho nhà tổ chức và khán giả. Đặt vé trực tuyến an toàn, check-in mã QR tức thì và cập nhật thông tin nhanh chóng.
+                </p>
+
+                <!-- Thanh Tìm kiếm Nhanh -->
+                <form method="get" asp-controller="Home" asp-action="Events" class="mb-4">
+                    <div class="card p-2 border-0 shadow-lg rounded-pill bg-white">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-0 text-muted ps-3">
+                                <i class="fas fa-search fs-5"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-0 shadow-none ps-2" placeholder="Tìm kiếm theo tên sự kiện, nghệ sĩ, địa điểm..." />
+                            <button class="btn btn-primary rounded-pill px-4 fw-semibold" type="submit">
+                                Tìm Kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    <a asp-controller="Home" asp-action="Events" class="btn btn-warning text-dark rounded-pill px-4 py-2 fw-semibold shadow-sm">
+                        <i class="fas fa-compass me-2"></i>Khám Phá Sự Kiện
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light rounded-pill px-4 py-2">
+                        <i class="fas fa-bullhorn me-2"></i>Dành Cho Ban Tổ Chức
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5 d-none d-lg-block">
+                <!-- Card Thống kê & Giới thiệu Nền tảng -->
+                <div class="card bg-white text-dark border-0 shadow-lg p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-calendar-alt fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Hệ Sinh Thái Sự Kiện</h5>
+                            <small class="text-muted">Cập nhật theo thời gian thực</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 text-center">
+                                <h3 class="fw-bold text-primary mb-0">@ViewBag.TotalEvents+</h3>
+                                <small class="text-muted">Sự kiện đang mở</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 text-center">
+                                <h3 class="fw-bold text-success mb-0">@ViewBag.TotalUsers+</h3>
+                                <small class="text-muted">Thành viên tham gia</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-shield-alt text-success fs-5 me-2"></i>
+                            <span class="fw-bold small">Bảo Mật & Tin Cậy Tuyệt Đối</span>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            Xác thực người dùng chuẩn ASP.NET Identity, mã QR check-in duy nhất và kiểm soát vé vào cổng chặt chẽ.
+                        </p>
+                    </div>
+
+                    <a asp-controller="Home" asp-action="Events" class="btn btn-primary w-100 rounded-pill fw-semibold py-2">
+                        Xem Các Sự Kiện Hot Nhất <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Danh mục sự kiện theo chủ đề -->
+<section class="container py-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 mb-2">Chủ đề</span>
+            <h3 class="fw-bold text-dark mb-0">Khám Phá Theo Danh Mục</h3>
+        </div>
+        <a asp-controller="Home" asp-action="Events" class="text-decoration-none fw-semibold">
+            Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var cat in categories)
+        {
+            <div class="col-md-3 col-6">
+                <a asp-controller="Home" asp-action="Events" asp-route-categoryId="@cat.Id" class="text-decoration-none text-dark">
+                    <div class="card card-hover border-0 shadow-sm p-3 text-center h-100">
+                        <div class="bg-primary-subtle text-primary rounded-circle mx-auto p-3 mb-2" style="width: 54px; height: 54px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-layer-group fs-4"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">@cat.Name</h6>
+                        <small class="text-muted">@(cat.Description != null && cat.Description.Length > 40 ? cat.Description.Substring(0, 40) + "..." : cat.Description)</small>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Sự kiện nổi bật -->
+<section class="bg-white py-5 border-top border-bottom">
+    <div class="container py-3">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 mb-2">Đặc sắc</span>
+                <h3 class="fw-bold text-dark mb-0">Sự Kiện Nổi Bật</h3>
+            </div>
+            <a asp-controller="Home" asp-action="Events" class="btn btn-outline-primary rounded-pill btn-sm px-3">
+                Xem thêm sự kiện <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            @if (!Model.Any())
+            {
+                <div class="col-12 text-center py-5">
+                    <div class="text-muted">
+                        <i class="fas fa-calendar-times fs-1 mb-3"></i>
+                        <p>Hiện chưa có sự kiện nào được xuất bản.</p>
+                    </div>
+                </div>
+            }
+            @foreach (var ev in Model)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-hover h-100 border-0 shadow-sm overflow-hidden">
+                        <div class="position-relative">
+                            <img src="@(string.IsNullOrEmpty(ev.ImageUrl) ? "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&auto=format&fit=crop&q=80" : ev.ImageUrl)" 
+                                 class="card-img-top object-fit-cover" 
+                                 style="height: 200px;" 
+                                 alt="@ev.Title" />
+                            <div class="position-absolute top-0 start-0 m-3">
+                                <span class="badge bg-primary shadow-sm rounded-pill px-3 py-1">
+                                    @(ev.Category?.Name ?? "Chung")
+                                </span>
+                            </div>
+                            <div class="position-absolute top-0 end-0 m-3">
+                                @if (ev.Status == "Open")
+                                {
+                                    <span class="badge bg-success shadow-sm rounded-pill px-3 py-1">Đang mở vé</span>
+                                }
+                                else if (ev.Status == "Draft")
+                                {
+                                    <span class="badge bg-secondary shadow-sm rounded-pill px-3 py-1">Sắp mở bán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark shadow-sm rounded-pill px-3 py-1">@ev.Status</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="text-muted small mb-2 d-flex align-items-center">
+                                <i class="fas fa-clock text-primary me-2"></i>
+                                <span>@ev.StartDate.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+
+                            <h5 class="card-title fw-bold text-dark mb-2">
+                                <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="text-decoration-none text-dark hover-primary">
+                                    @ev.Title
+                                </a>
+                            </h5>
+
+                            <p class="card-text text-muted small mb-3 flex-grow-1">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                @ev.Location
+                            </p>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted d-block">Giá vé từ:</small>
+                                    @if (ev.TicketTypes.Any())
+                                    {
+                                        var minPrice = ev.TicketTypes.Min(t => t.Price);
+                                        if (minPrice == 0)
+                                        {
+                                            <span class="fw-bold text-success fs-5">Miễn Phí</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold text-primary fs-5">@minPrice.ToString("N0") VNĐ</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-bold text-success fs-5">Miễn Phí</span>
+                                    }
+                                </div>
+                                <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+                                    Chi Tiết <i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Giải Pháp Toàn Diện Cho Mọi Nhu Cầu -->
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h3 class="fw-bold text-dark">Giải Pháp Toàn Diện Cho Mọi Nhu Cầu Sự Kiện</h3>
+        <p class="text-muted">Được thiết kế tối ưu cho các đơn vị tổ chức chuyên nghiệp và cộng đồng người tham dự</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Ban tổ chức -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 text-center h-100 border-top border-primary border-4">
+                <div class="avatar-circle mx-auto mb-3 bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="fas fa-bullhorn fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Dành Cho Ban Tổ Chức</h5>
+                <p class="text-muted small mb-0">Khởi tạo sự kiện nhanh chóng, thiết lập nhiều loại vé (VIP, Thường, Miễn phí), quản lý danh sách khách mời, quét mã QR check-in tại cửa và theo dõi báo cáo doanh thu theo thời gian thực.</p>
+            </div>
+        </div>
+
+        <!-- Người tham gia -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 text-center h-100 border-top border-success border-4">
+                <div class="avatar-circle mx-auto mb-3 bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="fas fa-user-check fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Dành Cho Người Tham Gia</h5>
+                <p class="text-muted small mb-0">Tìm kiếm sự kiện theo sở thích, đăng ký và đặt vé trực tuyến an toàn. Lưu trữ vé điện tử với mã QR cá nhân trên điện thoại, nhận thông báo nhắc lịch và gửi đánh giá sau khi tham gia.</p>
+            </div>
+        </div>
+
+        <!-- Quản trị hệ thống -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 text-center h-100 border-top border-warning border-4">
+                <div class="avatar-circle mx-auto mb-3 bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="fas fa-shield-alt fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Bảo Mật & Quản Trị Hệ Thống</h5>
+                <p class="text-muted small mb-0">Kiểm soát phân quyền chặt chẽ bằng ASP.NET Core Identity, quản lý tài khoản người dùng, giám sát nhật ký audit log và điều phối các danh mục sự kiện hoạt động thông suốt.</p>
+            </div>
+        </div>
+    </div>
+</section>
