@@ -6,35 +6,32 @@ using Quan_ly_su_kien.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Cấu hình Database SQL Server
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Chuỗi kết nối 'DefaultConnection' chưa được cấu hình.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. Cấu hình ASP.NET Core Identity & Phân quyền Role (US-01, US-09)
+// 2. Cấu hình ASP.NET Core Identity & Phân quyền Role
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Cấu hình mật khẩu thuận tiện cho học tập & đồ án
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
 
-    // Cấu hình khóa tài khoản khi đăng nhập sai nhiều lần
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Cấu hình xác nhận người dùng
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. Cấu hình Cookie Authentication & Đường dẫn phân quyền (US-09)
+// 3. Cấu hình Cookie Authentication & Đường dẫn phân quyền
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -51,7 +48,9 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// 5. Tự động khởi tạo Database và Dữ liệu mẫu (Seed Data)
+// 5. Tạm thời tắt khối SeedData để tránh ngắt ứng dụng lúc khởi động
+// (Khi database đã có bảng và user thì không cần chạy lại phần này)
+/*
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -65,6 +64,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Đã xảy ra lỗi trong quá trình khởi tạo dữ liệu mẫu.");
     }
 }
+*/
 
 // 6. Cấu hình HTTP Request Pipeline
 if (!app.Environment.IsDevelopment())
@@ -78,9 +78,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Thứ tự Middleware Xác thực & Phân quyền (bắt buộc)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 7. Cấu hình Định tuyến (Routing)
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
