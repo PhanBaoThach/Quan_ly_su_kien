@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EventMana Quản Trị Hệ Thống</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Site CSS chung -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+            .navbar-eventmana {
+                background-color: #0b1329;
+                padding: 0.75rem 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+                .navbar-eventmana .navbar-brand {
+                    font-weight: 700;
+                    font-size: 1.35rem;
+                    color: #ffffff;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .navbar-eventmana .brand-icon {
+                    background-color: #0d6efd;
+                    color: #fff;
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 8px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1rem;
+                }
+
+                .navbar-eventmana .nav-link {
+                    color: #d1d5db !important;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    padding: 0.5rem 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                }
+
+                    .navbar-eventmana .nav-link:hover,
+                    .navbar-eventmana .nav-link.active {
+                        color: #ffffff !important;
+                    }
+
+            .badge-admin-role {
+                background-color: #dc3545;
+                color: white;
+                font-size: 0.75rem;
+                font-weight: 600;
+                border-radius: 20px;
+                padding: 0.2rem 0.6rem;
+            }
+
+            .user-avatar-circle {
+                width: 32px;
+                height: 32px;
+                background-color: #0d6efd;
+                color: white;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                font-size: 0.85rem;
+            }
+
+            .dropdown-menu-dark-custom {
+                background-color: #111a36;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            }
+
+                .dropdown-menu-dark-custom .dropdown-item {
+                    color: #e2e8f0;
+                    font-size: 0.9rem;
+                    padding: 0.55rem 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                    .dropdown-menu-dark-custom .dropdown-item:hover {
+                        background-color: #1e293b;
+                        color: #fff;
+                    }
+
+                .dropdown-menu-dark-custom .dropdown-divider {
+                    border-color: rgba(255, 255, 255, 0.08);
+                }
+
+            body {
+                background-color: #f8fafc;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .main-content {
+                flex: 1 0 auto;
+            }
+
+            .footer-eventmana {
+                background-color: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                color: #64748b;
+                font-size: 0.875rem;
+                padding: 1.25rem 0;
+                margin-top: auto;
+            }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- NAVBAR CHUẨN EVENTMANA -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-eventmana shadow-sm">
+            <div class="container-fluid px-lg-4">
+                <!-- Logo EventMana nhảy thẳng về trang chủ -->
+                <a class="navbar-brand" href="/">
+                    <span class="brand-icon"><i class="fas fa-ticket-alt"></i></span>
+                    <span>Event<span class="text-primary">Mana</span></span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdminContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarAdminContent">
+                    <!-- Menu Trái -->
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-home"></i> Trang Chủ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Home/Events">
+                                <i class="fas fa-calendar-alt"></i> Khám Phá Sự Kiện
+                            </a>
+                        </li>
+
+                        <!-- Dropdown Menu Quản Trị Hệ Thống -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-shield-alt text-warning"></i> Quản Trị Hệ Thống
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark-custom">
+                                <li>
+                                    <a class="dropdown-item" href="/Admin">
+                                        <i class="fas fa-chart-line text-primary"></i> Dashboard Tổng Quan
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Admin/Categories">
+                                        <i class="fas fa-tags text-success"></i> Quản Lý Danh Mục
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Admin/Users">
+                                        <i class="fas fa-users-cog text-info"></i> Quản Lý Tài Khoản
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <!-- Menu Phải: Tài khoản Admin -->
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="user-avatar-circle">
+                                    @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "A")
+                                </span>
+                                <span class="text-white fw-semibold">@User.Identity?.Name</span>
+                                <span class="badge-admin-role">Admin</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark-custom">
+                                <li>
+                                    <a class="dropdown-item" href="/Account/Profile">
+                                        <i class="fas fa-user-circle"></i> Hồ sơ cá nhân
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <!-- Form Đăng xuất gửi thẳng action /Account/Logout -->
+                                    <form action="/Account/Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- NỘI DUNG VIEW CON (Index, Categories, Users) -->
+    <div class="main-content">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="container mt-3">
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        }
+
+        @RenderBody()
+    </div>
+
+    <!-- FOOTER EVENTMANA -->
+    <footer class="footer-eventmana text-center">
+        <div class="container">
+            <span>&copy; 2026 <strong>EventMana</strong> - Nền tảng kết nối & quản trị sự kiện trực tuyến.</span>
+        </div>
+    </footer>
+
+    <!-- Scripts chuẩn Bootstrap -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

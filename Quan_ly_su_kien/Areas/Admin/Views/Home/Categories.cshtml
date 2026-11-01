@@ -1,6 +1,8 @@
+@using Quan_ly_su_kien.Models
 @model IEnumerable<Category>
 @{
     ViewData["Title"] = "Quản Lý Danh Mục Sự Kiện";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container py-4">
@@ -9,7 +11,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
-                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Index">Quản trị</a></li>
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Admin" asp-action="Index">Quản trị</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Danh Mục</li>
                 </ol>
             </nav>
@@ -91,7 +93,7 @@
                                     </button>
 
                                     <!-- Nút Kích hoạt / Tạm dừng -->
-                                    <form asp-controller="Admin" asp-action="ToggleCategoryStatus" method="post" class="d-inline">
+                                    <form asp-area="Admin" asp-controller="Admin" asp-action="ToggleCategoryStatus" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@cat.Id" />
                                         <button type="submit" class="btn btn-sm @(cat.IsActive ? "btn-outline-warning text-dark" : "btn-outline-success") rounded-circle"
@@ -100,8 +102,8 @@
                                         </button>
                                     </form>
 
-                                    <!-- Nút Xóa (ràng buộc không xóa khi có sự kiện) -->
-                                    <form asp-controller="Admin" asp-action="DeleteCategory" method="post" class="d-inline">
+                                    <!-- Nút Xóa -->
+                                    <form asp-area="Admin" asp-controller="Admin" asp-action="DeleteCategory" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@cat.Id" />
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
@@ -116,7 +118,7 @@
                                 <div class="modal fade" id="editCategoryModal-@cat.Id" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog text-start">
                                         <div class="modal-content border-0 shadow">
-                                            <form asp-controller="Admin" asp-action="EditCategory" method="post">
+                                            <form asp-area="Admin" asp-controller="Admin" asp-action="EditCategory" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="Id" value="@cat.Id" />
                                                 <div class="modal-header">
@@ -159,7 +161,7 @@
 <div class="modal fade" id="createCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow">
-            <form asp-controller="Admin" asp-action="CreateCategory" method="post">
+            <form asp-area="Admin" asp-controller="Admin" asp-action="CreateCategory" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">

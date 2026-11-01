@@ -27,11 +27,12 @@ namespace Quan_ly_su_kien.Controllers
 
         // GET: /Account/Login
         [HttpGet]
-        public IActionResult Login(string? returnUrl = null)
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                return RedirectToLocal(returnUrl);
+                var currentUser = await _userManager.GetUserAsync(User);
+                return await DetermineUserRedirect(currentUser, returnUrl);
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -52,7 +53,6 @@ namespace Quan_ly_su_kien.Controllers
 
             try
             {
-                // Tìm user theo username hoặc email
                 var user = await _userManager.FindByNameAsync(model.UserNameOrEmail)
                            ?? await _userManager.FindByEmailAsync(model.UserNameOrEmail);
 
@@ -62,7 +62,6 @@ namespace Quan_ly_su_kien.Controllers
                     return View(model);
                 }
 
-                // Kiểm tra trạng thái tài khoản
                 if (!user.IsActive)
                 {
                     ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động. Vui lòng liên hệ Quản trị viên.");
@@ -75,7 +74,7 @@ namespace Quan_ly_su_kien.Controllers
                 {
                     _logger.LogInformation("Người dùng {UserName} đăng nhập thành công.", user.UserName);
                     TempData["SuccessMessage"] = $"Đăng nhập thành công! Chào mừng {user.FullName ?? user.UserName}.";
-                    return RedirectToLocal(returnUrl);
+                    return await DetermineUserRedirect(user, returnUrl);
                 }
 
                 ModelState.AddModelError(string.Empty, "Tài khoản hoặc mật khẩu không chính xác.");
@@ -90,7 +89,7 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // POST: /Account/QuickLogin (Đăng nhập trải nghiệm nhanh)
+        // POST: /Account/QuickLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> QuickLogin(string roleName)
@@ -112,9 +111,9 @@ namespace Quan_ly_su_kien.Controllers
 
                     if (roleName == "Admin")
                     {
-                        return RedirectToAction("Index", "Admin");
+                        return RedirectToAction("Index", "Admin", new { area = "" });
                     }
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Home", new { area = "" });
                 }
 
                 TempData["ErrorMessage"] = "Chưa tìm thấy dữ liệu tài khoản mẫu trong CSDL. Vui lòng kiểm tra kết nối SQL Server.";
@@ -123,18 +122,19 @@ namespace Quan_ly_su_kien.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi kết nối CSDL khi đăng nhập nhanh.");
-                TempData["ErrorMessage"] = "Không thể kết nối đến SQL Server. Vui lòng kiểm tra dịch vụ SQL Server (SQLEXPRESS).";
+                TempData["ErrorMessage"] = "Không thể kết nối đến SQL Server. Vui lòng kiểm tra dịch vụ SQL Server.";
                 return RedirectToAction("Login");
             }
         }
 
         // GET: /Account/Register
         [HttpGet]
-        public IActionResult Register(string? returnUrl = null)
+        public async Task<IActionResult> Register(string? returnUrl = null)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                return RedirectToLocal(returnUrl);
+                var currentUser = await _userManager.GetUserAsync(User);
+                return await DetermineUserRedirect(currentUser, returnUrl);
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -155,7 +155,6 @@ namespace Quan_ly_su_kien.Controllers
 
             try
             {
-                // Kiểm tra trùng username
                 var existingByUserName = await _userManager.FindByNameAsync(model.UserName);
                 if (existingByUserName != null)
                 {
@@ -163,7 +162,6 @@ namespace Quan_ly_su_kien.Controllers
                     return View(model);
                 }
 
-                // Kiểm tra trùng email
                 var existingByEmail = await _userManager.FindByEmailAsync(model.Email);
                 if (existingByEmail != null)
                 {
@@ -171,7 +169,6 @@ namespace Quan_ly_su_kien.Controllers
                     return View(model);
                 }
 
-                // Chỉ cho phép đăng ký vai trò Organizer hoặc Attendee
                 string assignedRole = model.Role == "Organizer" ? "Organizer" : "Attendee";
 
                 var user = new ApplicationUser
@@ -188,7 +185,6 @@ namespace Quan_ly_su_kien.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // Đảm bảo role đã tồn tại
                     if (!await _roleManager.RoleExistsAsync(assignedRole))
                     {
                         await _roleManager.CreateAsync(new IdentityRole(assignedRole));
@@ -198,7 +194,7 @@ namespace Quan_ly_su_kien.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
 
                     TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Chào mừng bạn gia nhập hệ thống EventMana.";
-                    return RedirectToLocal(returnUrl);
+                    return await DetermineUserRedirect(user, returnUrl);
                 }
 
                 foreach (var error in result.Errors)
@@ -223,8 +219,8 @@ namespace Quan_ly_su_kien.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            TempData["SuccessMessage"] = "Bạn đã đăng xuất khỏi hệ thống.";
-            return RedirectToAction("Index", "Home");
+            TempData["SuccessMessage"] = "Bạn đã đăng xuất khỏi hệ thống thành công.";
+            return RedirectToAction("Login", "Account", new { area = "" });
         }
 
         // GET: /Account/AccessDenied
@@ -329,19 +325,23 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction("Profile");
         }
 
-        private IActionResult RedirectToLocal(string? returnUrl)
+        private async Task<IActionResult> DetermineUserRedirect(ApplicationUser? user, string? returnUrl)
         {
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }
 
-            if (User.IsInRole("Admin"))
+            if (user != null)
             {
-                return RedirectToAction("Index", "Admin");
+                var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+                if (isAdmin)
+                {
+                    return RedirectToAction("Index", "Admin", new { area = "" });
+                }
             }
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home", new { area = "" });
         }
     }
 }

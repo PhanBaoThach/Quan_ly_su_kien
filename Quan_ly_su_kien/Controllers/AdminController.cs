@@ -9,6 +9,8 @@ using Quan_ly_su_kien.ViewModels;
 namespace Quan_ly_su_kien.Controllers
 {
     [Authorize(Roles = "Admin")]
+    [Route("Admin")]
+    [Route("Admin/[action]")]
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -28,7 +30,10 @@ namespace Quan_ly_su_kien.Controllers
             _logger = logger;
         }
 
-        // GET: /Admin (Dashboard tổng quan Sprint 1)
+        // GET: /Admin hoặc /Admin/Index
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public async Task<IActionResult> Index()
         {
             var totalUsers = await _userManager.Users.CountAsync();
@@ -40,6 +45,12 @@ namespace Quan_ly_su_kien.Controllers
             var orgUsers = await _userManager.GetUsersInRoleAsync("Organizer");
             var attUsers = await _userManager.GetUsersInRoleAsync("Attendee");
 
+            var totalRegistrations = await _context.Registrations.CountAsync();
+            var checkedInCount = await _context.Registrations.CountAsync(r => r.CheckInStatus);
+            var totalRevenue = await _context.Registrations
+                .Where(r => r.Status == "Paid" || r.Status == "Completed" || r.Status == "Success")
+                .SumAsync(r => (decimal?)r.TotalPrice) ?? 0m;
+
             ViewBag.TotalUsers = totalUsers;
             ViewBag.ActiveUsers = activeUsers;
             ViewBag.AdminCount = adminUsers.Count;
@@ -47,8 +58,10 @@ namespace Quan_ly_su_kien.Controllers
             ViewBag.AttCount = attUsers.Count;
             ViewBag.TotalCategories = totalCategories;
             ViewBag.TotalEvents = totalEvents;
+            ViewBag.TotalRegistrations = totalRegistrations;
+            ViewBag.CheckedInCount = checkedInCount;
+            ViewBag.TotalRevenue = totalRevenue;
 
-            // Lấy 5 người dùng mới nhất
             var recentUsers = await _userManager.Users
                 .OrderByDescending(u => u.CreatedAt)
                 .Take(5)
@@ -71,7 +84,7 @@ namespace Quan_ly_su_kien.Controllers
                 });
             }
 
-            return View(recentUserVms);
+            return View("~/Areas/Admin/Views/Home/Index.cshtml", recentUserVms);
         }
 
         // ==========================================
@@ -79,6 +92,7 @@ namespace Quan_ly_su_kien.Controllers
         // ==========================================
 
         // GET: /Admin/Users
+        [HttpGet]
         public async Task<IActionResult> Users(string? search, string? roleFilter)
         {
             var query = _userManager.Users.AsQueryable();
@@ -119,7 +133,8 @@ namespace Quan_ly_su_kien.Controllers
 
             ViewBag.Search = search;
             ViewBag.RoleFilter = roleFilter;
-            return View(userVms);
+
+            return View("~/Areas/Admin/Views/Home/Users.cshtml", userVms);
         }
 
         // POST: /Admin/CreateUser
@@ -199,7 +214,6 @@ namespace Quan_ly_su_kien.Controllers
             var updateResult = await _userManager.UpdateAsync(user);
             if (updateResult.Succeeded)
             {
-                // Cập nhật vai trò
                 var currentRoles = await _userManager.GetRolesAsync(user);
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
@@ -220,7 +234,7 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction("Users");
         }
 
-        // POST: /Admin/ToggleUserStatus (Khóa / Mở khóa)
+        // POST: /Admin/ToggleUserStatus
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleUserStatus(string id)
@@ -232,7 +246,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction("Users");
             }
 
-            // Không cho phép tự khóa tài khoản của chính mình
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser != null && currentUser.Id == user.Id)
             {
@@ -285,6 +298,7 @@ namespace Quan_ly_su_kien.Controllers
         // ==========================================
 
         // GET: /Admin/Categories
+        [HttpGet]
         public async Task<IActionResult> Categories()
         {
             var categories = await _context.Categories
@@ -292,7 +306,7 @@ namespace Quan_ly_su_kien.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            return View(categories);
+            return View("~/Areas/Admin/Views/Home/Categories.cshtml", categories);
         }
 
         // POST: /Admin/CreateCategory
@@ -361,7 +375,7 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction("Categories");
         }
 
-        // POST: /Admin/DeleteCategory (Acceptance criteria: Không cho phép xóa danh mục đang có sự kiện liên kết)
+        // POST: /Admin/DeleteCategory
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCategory(int id)
@@ -390,4 +404,3 @@ namespace Quan_ly_su_kien.Controllers
         }
     }
 }
-

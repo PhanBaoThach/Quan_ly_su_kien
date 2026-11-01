@@ -1,6 +1,8 @@
+@using Quan_ly_su_kien.ViewModels
 @model IEnumerable<UserManagementViewModel>
 @{
     ViewData["Title"] = "Quản Lý Tài Khoản Người Dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container py-4">
@@ -9,7 +11,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
-                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Index">Quản trị</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin">Quản trị</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Tài Khoản</li>
                 </ol>
             </nav>
@@ -27,7 +29,7 @@
 
     <!-- Thanh Tìm kiếm & Bộ lọc Role -->
     <div class="card border-0 shadow-sm p-3 mb-4">
-        <form method="get" asp-controller="Admin" asp-action="Users" class="row g-2 align-items-center">
+        <form method="get" action="/Admin/Users" class="row g-2 align-items-center">
             <div class="col-md-6 col-lg-7">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
@@ -123,18 +125,18 @@
                             <td class="text-end pe-4">
                                 <div class="d-inline-flex gap-1">
                                     <!-- Nút Sửa -->
-                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" 
-                                            data-bs-toggle="modal" 
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle"
+                                            data-bs-toggle="modal"
                                             data-bs-target="#editUserModal-@user.Id"
                                             title="Chỉnh sửa thông tin">
                                         <i class="fas fa-edit"></i>
                                     </button>
 
                                     <!-- Nút Khóa / Mở Khóa -->
-                                    <form asp-controller="Admin" asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                    <form action="/Admin/ToggleUserStatus" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@user.Id" />
-                                        <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning text-dark" : "btn-outline-success") rounded-circle" 
+                                        <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning text-dark" : "btn-outline-success") rounded-circle"
                                                 title="@(user.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")"
                                                 onclick="return confirm('Bạn có chắc muốn @(user.IsActive ? "khóa" : "mở khóa") tài khoản @user.UserName?');">
                                             <i class="fas @(user.IsActive ? "fa-lock" : "fa-unlock")"></i>
@@ -142,10 +144,10 @@
                                     </form>
 
                                     <!-- Nút Xóa -->
-                                    <form asp-controller="Admin" asp-action="DeleteUser" method="post" class="d-inline">
+                                    <form action="/Admin/DeleteUser" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@user.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" 
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"
                                                 title="Xóa tài khoản"
                                                 onclick="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản @user.UserName?');">
                                             <i class="fas fa-trash-alt"></i>
@@ -157,7 +159,7 @@
                                 <div class="modal fade" id="editUserModal-@user.Id" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog text-start">
                                         <div class="modal-content border-0 shadow">
-                                            <form asp-controller="Admin" asp-action="EditUser" method="post">
+                                            <form action="/Admin/EditUser" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="Id" value="@user.Id" />
                                                 <div class="modal-header">
@@ -212,7 +214,7 @@
 <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow">
-            <form asp-controller="Admin" asp-action="CreateUser" method="post">
+            <form action="/Admin/CreateUser" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
