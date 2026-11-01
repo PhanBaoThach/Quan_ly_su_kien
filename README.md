@@ -4,18 +4,6 @@
 > **Công nghệ:** ASP.NET Core MVC (.NET 10), Entity Framework Core  
 > **Cơ sở dữ liệu:** Microsoft SQL Server  
 > **Frontend:** HTML5, CSS3, Bootstrap 5, FontAwesome 6, Razor Views  
-
----
-
-## 👥 THÀNH VIÊN NHÓM & PHÂN CÔNG TRÁCH NHIỆM
-
-| STT | Thành Viên | Vai Trò | Nhiệm Vụ Phụ Trách & File Tương Ứng |
-| :---: | :--- | :--- | :--- |
-| **1** | **Phan Bảo Thạch** | **Nhóm trưởng** | • Kiến trúc Solution, Entity Framework Core, SQL Server<br>• Xác thực & Phân quyền ASP.NET Identity: [`AccountController.cs`](Quan_ly_su_kien/Controllers/AccountController.cs)<br>• Quản lý thông tin sự kiện: [`EventsController.cs`](Quan_ly_su_kien/Controllers/EventsController.cs)<br>• Quản lý đăng ký tham gia vé điện tử: `RegistrationsController.cs`<br>• Thông báo hệ thống & Cấu hình |
-| **2** | **Trương Minh Dương** | **Thành viên** | • Quản lý tài khoản người dùng, khóa/mở tài khoản: [`AdminController.cs`](Quan_ly_su_kien/Controllers/AdminController.cs)<br>• Bộ lọc & Tìm kiếm sự kiện nâng cao: [`HomeController.cs`](Quan_ly_su_kien/Controllers/HomeController.cs)<br>• Quản lý khách mời, diễn giả & Check-in QR: [`GuestsController.cs`](Quan_ly_su_kien/Controllers/GuestsController.cs)<br>• Quản lý hồ sơ cá nhân & Nhật ký hoạt động (Audit Log) |
-| **3** | **Bùi Thái Quý** | **Thành viên** | • Quản lý danh mục sự kiện (Categories): [`AdminController.cs`](Quan_ly_su_kien/Controllers/AdminController.cs)<br>• Quản lý loại vé & giá vé phát hành: [`TicketTypesController.cs`](Quan_ly_su_kien/Controllers/TicketTypesController.cs)<br>• Thống kê doanh thu & Báo cáo biểu đồ: `ReportsController.cs`<br>• Quản lý đánh giá/phản hồi sự kiện & Kiểm thử UI/UX |
-
-
 Dự án được tổ chức theo đúng chuẩn **ASP.NET Core MVC 3 lớp** để các thành viên khi clone về có thể làm việc song song mà không bị xung đột (conflict):
 
 ```text
