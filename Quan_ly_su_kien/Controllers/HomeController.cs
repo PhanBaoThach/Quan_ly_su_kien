@@ -17,90 +17,93 @@ namespace Quan_ly_su_kien.Controllers
             _logger = logger;
         }
 
-        // GET: /
         public async Task<IActionResult> Index()
         {
-            try
-            {
-                var categories = await _context.Categories
-                    .Where(c => c.IsActive)
-                    .Take(8)
-                    .ToListAsync();
+            var categories = await _context.Categories
+                .Where(c => c.IsActive)
+                .Take(8)
+                .ToListAsync();
 
-                var featuredEvents = await _context.Events
-                    .Include(e => e.Category)
-                    .Include(e => e.TicketTypes)
-                    .OrderByDescending(e => e.CreatedAt)
-                    .Take(6)
-                    .ToListAsync();
+            var featuredEvents = await _context.Events
+                .Include(e => e.Category)
+                .OrderByDescending(e => e.CreatedAt)
+                .Take(6)
+                .ToListAsync();
 
-                ViewBag.Categories = categories;
-                ViewBag.TotalEvents = await _context.Events.CountAsync();
-                ViewBag.TotalUsers = await _context.Users.CountAsync();
-                ViewBag.TotalCategories = await _context.Categories.CountAsync();
+            ViewBag.Categories = categories;
+            ViewBag.TotalEvents = await _context.Events.CountAsync();
+            ViewBag.TotalUsers = await _context.Users.CountAsync();
+            ViewBag.TotalCategories = await _context.Categories.CountAsync();
 
-                return View(featuredEvents);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading homepage data");
-                ViewBag.Categories = new List<Category>();
-                return View(new List<Event>());
-            }
+            return View(featuredEvents);
         }
 
-        // GET: /Home/Events
-        public async Task<IActionResult> Events(string? search, int? categoryId, string? status)
+        public async Task<IActionResult> Events(
+            string? search, int? categoryId, string? status, DateTime? fromDate, DateTime? toDate)
         {
-            try
+            var categoryList = await _context.Categories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            ViewBag.Categories = categoryList;
+            ViewBag.Search = search?.Trim();
+            ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.SelectedStatus = string.IsNullOrWhiteSpace(status) ? "All" : status;
+            ViewBag.FromDate = fromDate;
+            ViewBag.ToDate = toDate;
+
+            // Bỏ .Include(e => e.TicketTypes) để tuyệt đối không chạm vào bảng TicketTypes đang lệch cột
+            var query = _context.Events
+                .Include(e => e.Category)
+                .Where(e => e.Status != "Draft")
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                var query = _context.Events
-                    .Include(e => e.Category)
-                    .Include(e => e.TicketTypes)
-                    .AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    search = search.Trim().ToLower();
-                    query = query.Where(e => e.Title.ToLower().Contains(search)
-                                          || e.Location.ToLower().Contains(search)
-                                          || e.Description.ToLower().Contains(search));
-                }
-
-                if (categoryId.HasValue && categoryId.Value > 0)
-                {
-                    query = query.Where(e => e.CategoryId == categoryId.Value);
-                }
-
-                if (!string.IsNullOrWhiteSpace(status) && status != "All")
-                {
-                    query = query.Where(e => e.Status == status);
-                }
-
-                var events = await query.OrderByDescending(e => e.StartDate).ToListAsync();
-
-                ViewBag.Categories = await _context.Categories.Where(c => c.IsActive).ToListAsync();
-                ViewBag.Search = search;
-                ViewBag.SelectedCategoryId = categoryId;
-                ViewBag.SelectedStatus = status;
-
-                return View(events);
+                var kw = search.Trim().ToLower();
+                query = query.Where(e => e.Title.ToLower().Contains(kw)
+                                      || e.Location.ToLower().Contains(kw)
+                                      || e.Description.ToLower().Contains(kw)
+                                      || (e.Category != null && e.Category.Name.ToLower().Contains(kw)));
             }
-            catch (Exception ex)
+
+            if (categoryId.HasValue && categoryId.Value > 0)
             {
-                _logger.LogError(ex, "Error loading events list");
-                ViewBag.Categories = new List<Category>();
-                return View(new List<Event>());
+                query = query.Where(e => e.CategoryId == categoryId.Value);
             }
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All" && status != "Draft")
+            {
+                query = query.Where(e => e.Status == status);
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(e => e.StartDate >= fromDate.Value.Date);
+            }
+            if (toDate.HasValue)
+            {
+                query = query.Where(e => e.StartDate < toDate.Value.Date.AddDays(1));
+            }
+
+            var rawEvents = await query
+                .OrderBy(e => e.StartDate)
+                .ToListAsync();
+
+            var events = rawEvents
+                .OrderBy(e => (e.Status == "Completed" || e.Status == "Cancelled") ? 1 : 0)
+                .ThenBy(e => e.StartDate)
+                .ToList();
+
+            return View(events);
         }
 
-        // GET: /Home/EventDetail/5
         public async Task<IActionResult> EventDetail(int id)
         {
             var eventItem = await _context.Events
                 .Include(e => e.Category)
                 .Include(e => e.Organizer)
-                .Include(e => e.TicketTypes)
                 .Include(e => e.Guests)
                 .Include(e => e.Feedbacks)
                     .ThenInclude(f => f.User)

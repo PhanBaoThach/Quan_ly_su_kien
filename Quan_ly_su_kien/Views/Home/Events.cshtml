@@ -1,144 +1,651 @@
+@using Quan_ly_su_kien.Models
 @model IEnumerable<Event>
 @{
     ViewData["Title"] = "Khám Phá Sự Kiện";
+
     var categories = ViewBag.Categories as IEnumerable<Category> ?? new List<Category>();
+    string search = ViewBag.Search as string ?? "";
+    int? selCat = ViewBag.SelectedCategoryId as int?;
+    string selStatus = ViewBag.SelectedStatus as string ?? "All";
+    DateTime? fromDate = ViewBag.FromDate as DateTime?;
+    DateTime? toDate = ViewBag.ToDate as DateTime?;
+
+    bool hasFilter = !string.IsNullOrWhiteSpace(search) || selCat.HasValue
+                     || selStatus != "All" || fromDate.HasValue || toDate.HasValue;
+
+    (string Text, string Css, string Icon) StatusInfo(string s) => s switch
+    {
+        "Open" => ("Đang mở vé", "st-open", "fa-ticket-alt"),
+        "Ongoing" => ("Đang diễn ra", "st-ongoing", "fa-bolt"),
+        "Completed" => ("Đã diễn ra", "st-done", "fa-check-circle"),
+        "Cancelled" => ("Đã hủy", "st-cancel", "fa-ban"),
+        _ => (s, "st-done", "fa-circle")
+    };
+
+    string fromStr = fromDate?.ToString("yyyy-MM-dd") ?? "";
+    string toStr = toDate?.ToString("yyyy-MM-dd") ?? "";
+    int idx = 0;
 }
 
-<div class="bg-primary text-white py-4 shadow-sm mb-4">
+<style>
+    :root {
+        --ev-primary: #4f46e5;
+        --ev-secondary: #7c3aed;
+        --ev-pink: #ec4899;
+    }
+
+    .events-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #312e81 0%, #4f46e5 45%, #7c3aed 100%);
+        padding: 3.5rem 0 6.5rem;
+    }
+
+        .events-hero::before,
+        .events-hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: .35;
+        }
+
+        .events-hero::before {
+            width: 360px;
+            height: 360px;
+            top: -140px;
+            right: -80px;
+            background: radial-gradient(circle, #ec4899 0%, transparent 70%);
+        }
+
+        .events-hero::after {
+            width: 300px;
+            height: 300px;
+            bottom: -160px;
+            left: -60px;
+            background: radial-gradient(circle, #22d3ee 0%, transparent 70%);
+        }
+
+        .events-hero .container {
+            position: relative;
+            z-index: 1;
+        }
+
+    .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: rgba(255,255,255,.15);
+        border: 1px solid rgba(255,255,255,.25);
+        backdrop-filter: blur(6px);
+        padding: .35rem 1rem;
+        border-radius: 999px;
+        font-size: .8rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+    .hero-title {
+        font-weight: 800;
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        letter-spacing: -.02em;
+    }
+
+    .filter-card {
+        margin-top: -4rem;
+        border-radius: 1.25rem;
+        background: rgba(255,255,255,.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 1.25rem 3rem rgba(49, 46, 129, .18) !important;
+        position: relative;
+        z-index: 2;
+    }
+
+        .filter-card .form-label {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #6b7280;
+            margin-bottom: .3rem;
+        }
+
+        .filter-card .form-control,
+        .filter-card .form-select,
+        .filter-card .input-group-text {
+            border-radius: .75rem;
+            border-color: #e5e7eb;
+            padding-top: .65rem;
+            padding-bottom: .65rem;
+            background-color: #f9fafb;
+        }
+
+        .filter-card .input-group > .form-control {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .filter-card .input-group > .input-group-text {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            color: var(--ev-secondary);
+        }
+
+        .filter-card .form-control:focus,
+        .filter-card .form-select:focus {
+            background-color: #fff;
+            border-color: var(--ev-secondary);
+            box-shadow: 0 0 0 .2rem rgba(124, 58, 237, .15);
+        }
+
+    .btn-grad {
+        background: linear-gradient(135deg, var(--ev-primary), var(--ev-secondary));
+        border: 0;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 .5rem 1rem rgba(79, 70, 229, .3);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+        .btn-grad:hover {
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 .75rem 1.5rem rgba(79, 70, 229, .4);
+        }
+
+    .chip-row {
+        display: flex;
+        gap: .6rem;
+        overflow-x: auto;
+        padding: .25rem .1rem 1rem;
+        scrollbar-width: none;
+    }
+
+        .chip-row::-webkit-scrollbar {
+            display: none;
+        }
+
+    .chip {
+        flex: 0 0 auto;
+        padding: .5rem 1.15rem;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        color: #374151;
+        font-weight: 600;
+        font-size: .88rem;
+        text-decoration: none;
+        transition: all .2s ease;
+    }
+
+        .chip:hover {
+            border-color: var(--ev-secondary);
+            color: var(--ev-secondary);
+            transform: translateY(-2px);
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, var(--ev-primary), var(--ev-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 .4rem .9rem rgba(79, 70, 229, .3);
+        }
+
+    .result-count {
+        background: #eef2ff;
+        color: var(--ev-primary);
+        font-weight: 700;
+        border-radius: 999px;
+        padding: .35rem 1rem;
+        font-size: .85rem;
+    }
+
+    .event-card {
+        border-radius: 1.25rem;
+        background: #fff;
+        transition: transform .3s ease, box-shadow .3s ease;
+        opacity: 0;
+        animation: fadeUp .6s ease forwards;
+    }
+
+        .event-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 1.5rem 3rem rgba(79, 70, 229, .22) !important;
+        }
+
+    .img-wrap {
+        position: relative;
+        overflow: hidden;
+        height: 220px;
+    }
+
+    .event-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .6s ease;
+    }
+
+    .event-card:hover .event-img {
+        transform: scale(1.1);
+    }
+
+    .img-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, transparent 35%, rgba(0,0,0,.55) 100%);
+        pointer-events: none;
+    }
+
+    .cat-badge,
+    .status-badge,
+    .date-badge {
+        position: absolute;
+        z-index: 2;
+    }
+
+    .cat-badge {
+        top: 1rem;
+        left: 1rem;
+        background: rgba(255,255,255,.92);
+        color: var(--ev-primary);
+        font-weight: 700;
+        font-size: .75rem;
+        padding: .4rem .85rem;
+        border-radius: 999px;
+        box-shadow: 0 .25rem .75rem rgba(0,0,0,.15);
+    }
+
+    .status-badge {
+        top: 1rem;
+        right: 1rem;
+        color: #fff;
+        font-weight: 700;
+        font-size: .75rem;
+        padding: .4rem .85rem;
+        border-radius: 999px;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 .25rem .75rem rgba(0,0,0,.2);
+    }
+
+    .st-open {
+        background: rgba(16, 185, 129, .92);
+    }
+
+    .st-ongoing {
+        background: rgba(245, 158, 11, .95);
+    }
+
+    .st-done {
+        background: rgba(107, 114, 128, .92);
+    }
+
+    .st-cancel {
+        background: rgba(239, 68, 68, .92);
+    }
+
+    .date-badge {
+        left: 1rem;
+        bottom: 1rem;
+        background: #fff;
+        border-radius: .9rem;
+        padding: .4rem .8rem;
+        text-align: center;
+        line-height: 1.1;
+        min-width: 56px;
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.25);
+    }
+
+        .date-badge .day {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--ev-primary);
+        }
+
+        .date-badge .month {
+            font-size: .68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #6b7280;
+            letter-spacing: .05em;
+        }
+
+    .event-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 3rem;
+        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+
+        .event-title a {
+            transition: color .2s ease;
+        }
+
+            .event-title a:hover {
+                color: var(--ev-primary) !important;
+            }
+
+    .event-desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #6b7280;
+        font-size: .86rem;
+    }
+
+    .meta-row {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        font-size: .86rem;
+        color: #4b5563;
+    }
+
+    .meta-ico {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-radius: .6rem;
+        display: grid;
+        place-items: center;
+        font-size: .8rem;
+    }
+
+    .ico-time {
+        background: #eef2ff;
+        color: var(--ev-primary);
+    }
+
+    .ico-loc {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .ticket-bar {
+        height: 6px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        overflow: hidden;
+    }
+
+        .ticket-bar > span {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+            background-size: 200% 100%;
+        }
+
+    .price-text {
+        font-weight: 800;
+        font-size: 1.2rem;
+        background: linear-gradient(135deg, var(--ev-primary), var(--ev-pink));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .price-free {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #10b981;
+    }
+
+    .go-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        text-decoration: none;
+        background: linear-gradient(135deg, var(--ev-primary), var(--ev-secondary));
+        box-shadow: 0 .5rem 1rem rgba(79, 70, 229, .35);
+        transition: transform .25s ease;
+    }
+
+        .go-btn:hover {
+            color: #fff;
+            transform: translateX(4px) scale(1.08);
+        }
+
+    .empty-box {
+        background: #fff;
+        border: 2px dashed #c7d2fe;
+        border-radius: 1.5rem;
+        padding: 3.5rem 1.5rem;
+    }
+
+    .empty-ico {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 1rem;
+        font-size: 2.2rem;
+        color: var(--ev-primary);
+        background: #eef2ff;
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .event-card {
+            animation: none;
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="events-hero text-white">
     <div class="container">
-        <h2 class="fw-bold mb-1"><i class="fas fa-calendar-check me-2"></i>Khám Phá Các Sự Kiện Sắp Diễn Ra</h2>
-        <p class="text-white-50 mb-0">Tìm kiếm và lọc sự kiện theo chủ đề, địa điểm và thời gian phù hợp với bạn.</p>
+        <span class="hero-pill"><i class="fas fa-sparkles"></i> EventMana</span>
+        <h1 class="hero-title mb-2">Khám Phá Các Sự Kiện</h1>
+        <p class="text-white-50 mb-0 fs-6">Tìm kiếm và lọc sự kiện theo chủ đề, địa điểm và thời gian phù hợp với bạn.</p>
     </div>
 </div>
 
 <div class="container pb-5">
-    <!-- Bộ lọc & Tìm kiếm -->
-    <div class="card border-0 shadow-sm p-3 mb-4">
-        <form method="get" asp-controller="Home" asp-action="Events" class="row g-2 align-items-center">
-            <div class="col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
-                    <input type="text" name="search" value="@ViewBag.Search" class="form-control border-start-0" placeholder="Tên sự kiện, địa điểm, từ khóa..." />
+    <div class="card filter-card border-0 p-3 p-md-4 mb-4">
+        <form method="get" asp-controller="Home" asp-action="Events">
+            <div class="row g-3">
+                <div class="col-12 col-lg-5">
+                    <label class="form-label">Từ khóa</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" value="@search" class="form-control"
+                               placeholder="Tên sự kiện, địa điểm, từ khóa..." />
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-md-3">
-                <select name="categoryId" class="form-select">
-                    <option value="">-- Tất cả danh mục --</option>
-                    @foreach (var c in categories)
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <label class="form-label">Danh mục</label>
+                    <select name="categoryId" class="form-select">
+                        <option value="">Tất cả danh mục</option>
+                        @foreach (var c in categories)
+                        {
+                            <option value="@c.Id" selected="@(selCat == c.Id)">@c.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        <option value="All" selected="@(selStatus == "All")">Tất cả trạng thái</option>
+                        <option value="Open" selected="@(selStatus == "Open")">Đang mở vé</option>
+                        <option value="Ongoing" selected="@(selStatus == "Ongoing")">Đang diễn ra</option>
+                        <option value="Completed" selected="@(selStatus == "Completed")">Đã diễn ra</option>
+                        <option value="Cancelled" selected="@(selStatus == "Cancelled")">Đã hủy</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" name="fromDate" value="@fromStr" class="form-control" />
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" name="toDate" value="@toStr" class="form-control" />
+                </div>
+
+                <div class="col-12 col-lg-6 d-flex align-items-end justify-content-lg-end gap-2">
+                    @if (hasFilter)
                     {
-                        <option value="@c.Id" selected="@(ViewBag.SelectedCategoryId == c.Id)">@c.Name</option>
+                        <a asp-controller="Home" asp-action="Events" class="btn btn-light border rounded-pill px-4 fw-semibold">
+                            <i class="fas fa-rotate-left me-1"></i> Xóa bộ lọc
+                        </a>
                     }
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <select name="status" class="form-select">
-                    <option value="All" selected="@(ViewBag.SelectedStatus == "All" || string.IsNullOrEmpty(ViewBag.SelectedStatus))">-- Trạng thái --</option>
-                    <option value="Open" selected="@(ViewBag.SelectedStatus == "Open")">Đang mở vé</option>
-                    <option value="Draft" selected="@(ViewBag.SelectedStatus == "Draft")">Dự thảo</option>
-                    <option value="Completed" selected="@(ViewBag.SelectedStatus == "Completed")">Đã diễn ra</option>
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100 rounded-pill">
-                    <i class="fas fa-filter me-1"></i> Áp Dụng
-                </button>
+                    <button type="submit" class="btn btn-grad rounded-pill px-4 py-2">
+                        <i class="fas fa-filter me-1"></i> Áp dụng
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
-    <!-- Danh sách sự kiện -->
-    <div class="row g-4">
-        @if (!Model.Any())
+    <div class="chip-row">
+        <a asp-controller="Home" asp-action="Events"
+           asp-route-search="@search" asp-route-status="@selStatus"
+           asp-route-fromDate="@fromStr" asp-route-toDate="@toStr"
+           class="chip @(!selCat.HasValue ? "active" : "")">
+            <i class="fas fa-layer-group me-1"></i> Tất cả
+        </a>
+        @foreach (var c in categories)
         {
-            <div class="col-12 text-center py-5">
-                <div class="text-muted">
-                    <i class="fas fa-search fs-1 mb-3"></i>
-                    <h4>Không tìm thấy sự kiện nào</h4>
-                    <p class="text-muted">Hãy thử thay đổi từ khóa hoặc bộ lọc danh mục.</p>
-                    <a asp-controller="Home" asp-action="Events" class="btn btn-outline-primary rounded-pill px-4">Xóa bộ lọc</a>
+            <a asp-controller="Home" asp-action="Events"
+               asp-route-search="@search" asp-route-categoryId="@c.Id" asp-route-status="@selStatus"
+               asp-route-fromDate="@fromStr" asp-route-toDate="@toStr"
+               class="chip @(selCat == c.Id ? "active" : "")">@c.Name</a>
+        }
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0 fw-bold">@(hasFilter ? "Kết quả tìm kiếm" : "Tất cả sự kiện")</h4>
+        <span class="result-count"><i class="fas fa-calendar-day me-1"></i> @(Model?.Count() ?? 0) sự kiện</span>
+    </div>
+
+    <div class="row g-4">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="col-12">
+                <div class="empty-box text-center">
+                    <div class="empty-ico"><i class="fas fa-magnifying-glass"></i></div>
+                    <h4 class="fw-bold">Không tìm thấy sự kiện nào</h4>
+                    <p class="text-muted">Hãy thử thay đổi từ khóa hoặc nới rộng bộ lọc.</p>
+                    <a asp-controller="Home" asp-action="Events" class="btn btn-grad rounded-pill px-4">
+                        <i class="fas fa-rotate-left me-1"></i> Xóa bộ lọc
+                    </a>
                 </div>
             </div>
         }
-        @foreach (var ev in Model)
+        else
         {
-            <div class="col-lg-4 col-md-6">
-                <div class="card card-hover h-100 border-0 shadow-sm overflow-hidden">
-                    <div class="position-relative">
-                        <img src="@(string.IsNullOrEmpty(ev.ImageUrl) ? "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&auto=format&fit=crop&q=80" : ev.ImageUrl)" 
-                             class="card-img-top object-fit-cover" 
-                             style="height: 200px;" 
-                             alt="@ev.Title" />
-                        <div class="position-absolute top-0 start-0 m-3">
-                            <span class="badge bg-primary shadow-sm rounded-pill px-3 py-1">
-                                @(ev.Category?.Name ?? "Chung")
-                            </span>
-                        </div>
-                        <div class="position-absolute top-0 end-0 m-3">
-                            @if (ev.Status == "Open")
-                            {
-                                <span class="badge bg-success shadow-sm rounded-pill px-3 py-1">Đang mở vé</span>
-                            }
-                            else if (ev.Status == "Draft")
-                            {
-                                <span class="badge bg-secondary shadow-sm rounded-pill px-3 py-1">Dự thảo</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-info text-dark shadow-sm rounded-pill px-3 py-1">@ev.Status</span>
-                            }
-                        </div>
-                    </div>
+            foreach (var ev in Model)
+            {
+                var st = StatusInfo(ev.Status);
+                var delay = Math.Min(idx++, 8) * 70;
 
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="text-muted small mb-2 d-flex align-items-center">
-                            <i class="fas fa-clock text-primary me-2"></i>
-                            <span>@ev.StartDate.ToString("dd/MM/yyyy HH:mm")</span>
-                        </div>
+                int totalTickets = ev.TicketTypes != null ? ev.TicketTypes.Sum(t => t.Quantity) : 0;
+                int soldTickets = ev.TicketTypes != null ? ev.TicketTypes.Sum(t => t.SoldQuantity) : 0;
+                int remaining = Math.Max(totalTickets - soldTickets, 0);
+                int soldPercent = totalTickets > 0 ? (int)Math.Round(soldTickets * 100.0 / totalTickets) : 0;
 
-                        <h5 class="card-title fw-bold text-dark mb-2">
-                            <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="text-decoration-none text-dark hover-primary">
-                                @ev.Title
-                            </a>
-                        </h5>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card event-card h-100 border-0 shadow-sm overflow-hidden" style="animation-delay:@(delay)ms">
+                        <div class="img-wrap">
+                            <img src="@(string.IsNullOrEmpty(ev.ImageUrl) ? "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&auto=format&fit=crop&q=80" : ev.ImageUrl)"
+                                 class="event-img" alt="@ev.Title" />
 
-                        <p class="card-text text-muted small mb-3 flex-grow-1">
-                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
-                            @ev.Location
-                        </p>
+                            <span class="cat-badge"><i class="fas fa-tag me-1"></i>@(ev.Category?.Name ?? "Chung")</span>
+                            <span class="status-badge @st.Css"><i class="fas @st.Icon me-1"></i>@st.Text</span>
 
-                        <hr class="my-3">
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <small class="text-muted d-block">Giá vé từ:</small>
-                                @if (ev.TicketTypes.Any())
-                                {
-                                    var minPrice = ev.TicketTypes.Min(t => t.Price);
-                                    if (minPrice == 0)
-                                    {
-                                        <span class="fw-bold text-success fs-5">Miễn Phí</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fw-bold text-primary fs-5">@minPrice.ToString("N0") VNĐ</span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="fw-bold text-success fs-5">Miễn Phí</span>
-                                }
+                            <div class="date-badge">
+                                <div class="day">@ev.StartDate.ToString("dd")</div>
+                                <div class="month">Th@(ev.StartDate.ToString("MM"))</div>
                             </div>
-                            <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
-                                Chi Tiết <i class="fas fa-chevron-right ms-1"></i>
-                            </a>
+                        </div>
+
+                        <div class="card-body d-flex flex-column p-4">
+                            <h5 class="card-title fw-bold event-title mb-2">
+                                <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id"
+                                   class="text-decoration-none text-dark">@ev.Title</a>
+                            </h5>
+
+                            <p class="event-desc mb-3">@ev.Description</p>
+
+                            <div class="meta-row mb-2">
+                                <span class="meta-ico ico-time"><i class="fas fa-clock"></i></span>
+                                <span class="pt-1">@ev.StartDate.ToString("HH:mm - dd/MM/yyyy")</span>
+                            </div>
+                            <div class="meta-row mb-3">
+                                <span class="meta-ico ico-loc"><i class="fas fa-location-dot"></i></span>
+                                <span class="pt-1">@ev.Location</span>
+                            </div>
+
+                            <div class="mt-auto">
+                                @if (totalTickets > 0)
+                                {
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span class="text-muted">Đã bán @soldPercent%</span>
+                                        <span class="fw-semibold @(remaining == 0 ? "text-danger" : "text-success")">
+                                            @(remaining == 0 ? "Hết vé" : $"Còn {remaining} vé")
+                                        </span>
+                                    </div>
+                                    <div class="ticket-bar mb-3"><span style="width:@(soldPercent)%"></span></div>
+                                }
+
+                                <hr class="my-3">
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted d-block">Giá vé từ</small>
+                                        @if (ev.TicketTypes != null && ev.TicketTypes.Any())
+                                        {
+                                            var minPrice = ev.TicketTypes.Min(t => t.Price);
+                                            if (minPrice == 0)
+                                            {
+                                                <span class="price-free">Miễn phí</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="price-text">@minPrice.ToString("N0") VNĐ</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="price-free">Miễn phí</span>
+                                        }
+                                    </div>
+                                    <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@ev.Id"
+                                       class="go-btn" title="Xem chi tiết">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         }
     </div>
 </div>
-
