@@ -1,0 +1,425 @@
+@model Quan_ly_su_kien.Models.Event
+@{
+    ViewData["Title"] = Model.Title + " - Chi Tiết Sự Kiện";
+    var imgUrl = string.IsNullOrWhiteSpace(Model.ImageUrl) 
+        ? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop" 
+        : Model.ImageUrl;
+
+    var validRegistrations = Model.Registrations?.Where(r => r.Status != "Cancelled").ToList() ?? new List<Quan_ly_su_kien.Models.Registration>();
+    var totalRegisteredTickets = validRegistrations.Sum(r => r.Quantity);
+    var totalRevenue = validRegistrations.Sum(r => r.TotalPrice);
+    var ticketFillPercent = Model.MaxTickets > 0 ? (int)Math.Min(100, Math.Round((double)totalRegisteredTickets / Model.MaxTickets * 100)) : 0;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a asp-action="MyEvents" class="text-decoration-none text-muted">Quản Lý Sự Kiện</a></li>
+            <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <!-- Event Banner & Header Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="position-relative" style="height: 260px;">
+            <img src="@imgUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop';">
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.05) 100%);"></div>
+            
+            <div class="position-absolute bottom-0 start-0 p-4 text-white w-100 d-flex flex-wrap justify-content-between align-items-end gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary bg-opacity-75 rounded-pill px-3 py-1">
+                            <i class="fas fa-tag me-1"></i>@(Model.Category?.Name ?? "Chưa phân loại")
+                        </span>
+                        @switch (Model.Status)
+                        {
+                            case "Open":
+                                <span class="badge bg-success rounded-pill px-3 py-1"><i class="fas fa-door-open me-1"></i> Mở vé</span>
+                                break;
+                            case "Ongoing":
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="fas fa-broadcast-tower me-1"></i> Đang diễn ra</span>
+                                break;
+                            case "Completed":
+                                <span class="badge bg-info text-dark rounded-pill px-3 py-1"><i class="fas fa-flag-checkered me-1"></i> Đã kết thúc</span>
+                                break;
+                            case "Cancelled":
+                                <span class="badge bg-danger rounded-pill px-3 py-1"><i class="fas fa-ban me-1"></i> Đã hủy</span>
+                                break;
+                            default:
+                                <span class="badge bg-secondary rounded-pill px-3 py-1"><i class="fas fa-pencil-alt me-1"></i> Bản nháp</span>
+                                break;
+                        }
+                    </div>
+                    <h1 class="h2 fw-bold mb-1 text-white text-shadow">@Model.Title</h1>
+                    <div class="small text-white-50">
+                        <i class="fas fa-user-tie me-1"></i>Tổ chức bởi: <strong class="text-white">@(Model.Organizer?.FullName ?? Model.Organizer?.UserName ?? "Ban tổ chức")</strong>
+                        <span class="mx-2">•</span>
+                        <i class="fas fa-calendar-alt me-1"></i>Tạo lúc @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="fas fa-edit me-1 text-primary"></i> Sửa Sự Kiện
+                    </a>
+                    <a asp-action="MyEvents" class="btn btn-outline-light rounded-pill px-3 fw-semibold">
+                        <i class="fas fa-arrow-left me-1"></i> Quay Lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Metrics Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
+                        <i class="fas fa-ticket-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">VÉ ĐÃ ĐĂNG KÝ</div>
+                        <div class="fs-4 fw-bold text-dark">@totalRegisteredTickets / @Model.MaxTickets</div>
+                        <small class="text-muted">Đạt @ticketFillPercent% công suất</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
+                        <i class="fas fa-money-bill-wave fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">DOANH THU ƯỚC TÍNH</div>
+                        <div class="fs-4 fw-bold text-success">@totalRevenue.ToString("N0") <small class="fs-6">₫</small></div>
+                        <small class="text-muted">Từ @validRegistrations.Count đơn đặt</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3 text-info">
+                        <i class="fas fa-layer-group fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">HẠNG VÉ THIẾT LẬP</div>
+                        <div class="fs-4 fw-bold text-dark">@(Model.TicketTypes?.Count ?? 0)</div>
+                        <small class="text-muted">Gói vé bán ra</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">
+                        <i class="fas fa-user-friends fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">KHÁCH MỜI ĐẶC BIỆT</div>
+                        <div class="fs-4 fw-bold text-dark">@(Model.Guests?.Count ?? 0)</div>
+                        <small class="text-muted">Diễn giả / VIP</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Details Tabs -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+            <ul class="nav nav-tabs card-header-tabs" id="eventTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-semibold text-dark py-3 px-4" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Tổng Quan Sự Kiện
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-dark py-3 px-4" id="tickets-tab" data-bs-toggle="tab" data-bs-target="#tickets" type="button" role="tab">
+                        <i class="fas fa-tags me-2 text-info"></i>Các Loại Vé (@(Model.TicketTypes?.Count ?? 0))
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-dark py-3 px-4" id="registrations-tab" data-bs-toggle="tab" data-bs-target="#registrations" type="button" role="tab">
+                        <i class="fas fa-users me-2 text-success"></i>Người Đăng Ký (@validRegistrations.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-dark py-3 px-4" id="guests-tab" data-bs-toggle="tab" data-bs-target="#guests" type="button" role="tab">
+                        <i class="fas fa-id-badge me-2 text-warning"></i>Khách Mời / VIP (@(Model.Guests?.Count ?? 0))
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="eventTabContent">
+                <!-- TAB 1: TỔNG QUAN & MÔ TẢ -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <h5 class="fw-bold text-dark mb-3">Mô tả sự kiện</h5>
+                            <div class="p-3 bg-light rounded-4 text-secondary lh-lg" style="white-space: pre-line;">
+                                @Model.Description
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <h5 class="fw-bold text-dark mb-3">Thông số tổ chức</h5>
+                            <ul class="list-group list-group-flush rounded-4 border">
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <span class="text-muted"><i class="fas fa-calendar-day text-success me-2"></i>Bắt đầu:</span>
+                                    <span class="fw-bold text-dark">@Model.StartDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <span class="text-muted"><i class="fas fa-calendar-check text-danger me-2"></i>Kết thúc:</span>
+                                    <span class="fw-bold text-dark">@Model.EndDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <span class="text-muted"><i class="fas fa-map-marked-alt text-primary me-2"></i>Địa điểm:</span>
+                                    <span class="fw-bold text-dark text-end ms-3">@Model.Location</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <span class="text-muted"><i class="fas fa-chair text-warning me-2"></i>Số vé tối đa:</span>
+                                    <span class="fw-bold text-dark">@Model.MaxTickets vé</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <span class="text-muted"><i class="fas fa-folder text-info me-2"></i>Danh mục:</span>
+                                    <span class="badge bg-light text-primary border">@(Model.Category?.Name ?? "Chưa phân loại")</span>
+                                </li>
+                            </ul>
+
+                            <div class="card border-0 bg-light rounded-4 mt-4 p-3">
+                                <div class="fw-bold text-dark mb-2"><i class="fas fa-sync-alt text-primary me-2"></i>Chuyển đổi trạng thái nhanh:</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="newStatus" value="Open" />
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" @(Model.Status == "Open" ? "disabled" : "")>Mở Vé</button>
+                                    </form>
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="newStatus" value="Ongoing" />
+                                        <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3" @(Model.Status == "Ongoing" ? "disabled" : "")>Đang diễn ra</button>
+                                    </form>
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="newStatus" value="Completed" />
+                                        <button type="submit" class="btn btn-sm btn-info rounded-pill px-3" @(Model.Status == "Completed" ? "disabled" : "")>Kết Thúc</button>
+                                    </form>
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="newStatus" value="Cancelled" />
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3" @(Model.Status == "Cancelled" ? "disabled" : "")>Hủy Bỏ</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: CÁC LOẠI VÉ -->
+                <div class="tab-pane fade" id="tickets" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0">Cấu hình các loại vé</h5>
+                        <a asp-controller="TicketTypes" asp-action="EventTickets" asp-route-eventId="@Model.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold">
+                            <i class="fas fa-cog me-1"></i> Quản Lý Chi Tiết Loại Vé
+                        </a>
+                    </div>
+
+                    @if (Model.TicketTypes != null && Model.TicketTypes.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border rounded-3 mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên loại vé</th>
+                                        <th>Giá vé</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-center">Đã bán</th>
+                                        <th>Thời gian mở bán</th>
+                                        <th>Thời gian đóng bán</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in Model.TicketTypes)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-dark">@ticket.TypeName</td>
+                                            <td class="text-success fw-bold">@(ticket.Price > 0 ? ticket.Price.ToString("N0") + " ₫" : "Miễn phí")</td>
+                                            <td class="text-center">@ticket.Quantity</td>
+                                            <td class="text-center"><span class="badge bg-primary rounded-pill px-2">@ticket.SoldQuantity</span></td>
+                                            <td class="small text-muted">@ticket.SaleStart.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="small text-muted">@ticket.SaleEnd.ToString("dd/MM/yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light border text-center py-4 rounded-4 mb-0">
+                            <i class="fas fa-ticket-alt fa-2x text-muted mb-2"></i>
+                            <div class="fw-bold text-dark">Chưa có loại vé nào</div>
+                            <p class="text-muted small mb-3">Hãy cấu hình các loại vé (Vé thường, Vé VIP...) để người tham gia có thể đăng ký.</p>
+                            <a asp-controller="TicketTypes" asp-action="EventTickets" asp-route-eventId="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                <i class="fas fa-plus me-1"></i> Thêm Loại Vé Mới
+                            </a>
+                        </div>
+                    }
+                </div>
+
+                <!-- TAB 3: NGƯỜI ĐĂNG KÝ VÉ -->
+                <div class="tab-pane fade" id="registrations" role="tabpanel">
+                    <h5 class="fw-bold text-dark mb-3">Danh sách người đăng ký vé</h5>
+
+                    @if (validRegistrations.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border rounded-3 mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Người đăng ký</th>
+                                        <th>Liên hệ</th>
+                                        <th>Loại vé</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th>Tổng tiền</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-center">Check-in</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var reg in validRegistrations)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-dark">@(reg.User?.FullName ?? reg.User?.UserName ?? "N/A")</div>
+                                                <small class="text-muted">Username: @(reg.User?.UserName ?? "N/A")</small>
+                                            </td>
+                                            <td class="small">
+                                                <div><i class="fas fa-envelope text-muted me-1"></i>@(reg.User?.Email ?? "N/A")</div>
+                                                <div><i class="fas fa-phone text-muted me-1"></i>@(reg.User?.PhoneNumber ?? "Chưa có")</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">
+                                                    @(reg.TicketType?.TypeName ?? "Vé tiêu chuẩn")
+                                                </span>
+                                            </td>
+                                            <td class="text-center fw-bold">@reg.Quantity</td>
+                                            <td class="text-success fw-bold">@reg.TotalPrice.ToString("N0") ₫</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
+                                                    @reg.Status
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (reg.CheckInStatus)
+                                                {
+                                                    <span class="badge bg-success rounded-pill px-2 py-1" title="Đã Check-in @reg.CheckInTime?.ToString("HH:mm dd/MM")">
+                                                        <i class="fas fa-check-circle me-1"></i> Đã vào cổng
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill">
+                                                        Chưa check-in
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light border text-center py-4 rounded-4 mb-0">
+                            <i class="fas fa-user-clock fa-2x text-muted mb-2"></i>
+                            <div class="fw-bold text-dark">Chưa có người đăng ký vé</div>
+                            <p class="text-muted small mb-0">Khi người tham dự đăng ký vé thành công, danh sách sẽ hiển thị tại đây.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- TAB 4: KHÁCH MỜI / VIP -->
+                <div class="tab-pane fade" id="guests" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0">Danh sách khách mời đặc biệt & Diễn giả</h5>
+                        <a asp-controller="Guests" asp-action="EventGuests" asp-route-eventId="@Model.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold">
+                            <i class="fas fa-user-plus me-1"></i> Quản Lý Danh Sách Khách Mời
+                        </a>
+                    </div>
+
+                    @if (Model.Guests != null && Model.Guests.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border rounded-3 mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Họ và tên</th>
+                                        <th>Vai trò / Chức danh</th>
+                                        <th>Email</th>
+                                        <th>Mã thư mời</th>
+                                        <th class="text-center">Trạng thái Check-in</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var guest in Model.Guests)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-dark">@guest.FullName</td>
+                                            <td><span class="badge bg-warning bg-opacity-25 text-dark">@(guest.RoleTitle ?? "Khách VIP")</span></td>
+                                            <td class="small text-muted">@guest.Email</td>
+                                            <td><code class="fw-bold text-primary">@guest.InvitationCode</code></td>
+                                            <td class="text-center">
+                                                @if (guest.IsCheckedIn)
+                                                {
+                                                    <span class="badge bg-success rounded-pill px-2 py-1"><i class="fas fa-check me-1"></i>Đã vào cổng</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary rounded-pill px-2 py-1">Chưa check-in</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light border text-center py-4 rounded-4 mb-0">
+                            <i class="fas fa-id-badge fa-2x text-muted mb-2"></i>
+                            <div class="fw-bold text-dark">Chưa có khách mời đặc biệt</div>
+                            <p class="text-muted small mb-3">Bạn có thể gửi thư mời riêng cho diễn giả, VIP hoặc đối tác tham dự sự kiện.</p>
+                            <a asp-controller="Guests" asp-action="EventGuests" asp-route-eventId="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                <i class="fas fa-user-plus me-1"></i> Thêm Khách Mời
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-shadow {
+        text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+</style>
+

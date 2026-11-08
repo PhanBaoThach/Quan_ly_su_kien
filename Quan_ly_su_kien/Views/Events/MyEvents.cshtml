@@ -1,0 +1,365 @@
+@model IEnumerable<Quan_ly_su_kien.Models.Event>
+@{
+    ViewData["Title"] = "Quản Lý Sự Kiện";
+    var categories = ViewBag.Categories as IEnumerable<Quan_ly_su_kien.Models.Category> ?? Enumerable.Empty<Quan_ly_su_kien.Models.Category>();
+    string currentSearch = ViewBag.Search as string ?? "";
+    int? currentCategoryId = ViewBag.SelectedCategoryId as int?;
+    string currentStatus = ViewBag.SelectedStatus as string ?? "All";
+}
+
+<div class="container py-4">
+    <!-- Header & Action -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
+                    <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">Quản Lý Sự Kiện</li>
+                </ol>
+            </nav>
+            <h2 class="h3 fw-bold mb-0 text-dark">
+                <i class="fas fa-calendar-alt text-primary me-2"></i>Quản Lý Sự Kiện Của Bạn
+            </h2>
+            <p class="text-muted small mb-0">Theo dõi, tạo mới và quản lý trạng thái các sự kiện do bạn tổ chức.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm fw-semibold">
+                <i class="fas fa-plus-circle me-1"></i> Tạo Sự Kiện Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-white">
+                <div class="text-muted small fw-semibold">TỔNG SỰ KIỆN</div>
+                <div class="fs-3 fw-bold text-dark mt-1">@ViewBag.TotalEvents</div>
+                <div class="small text-muted"><i class="fas fa-layer-group text-primary me-1"></i>Toàn bộ</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-white">
+                <div class="text-muted small fw-semibold">ĐANG MỞ VÉ</div>
+                <div class="fs-3 fw-bold text-success mt-1">@ViewBag.OpenCount</div>
+                <div class="small text-success"><i class="fas fa-check-circle me-1"></i>Công khai</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-white">
+                <div class="text-muted small fw-semibold">BẢN NHÁP</div>
+                <div class="fs-3 fw-bold text-secondary mt-1">@ViewBag.DraftCount</div>
+                <div class="small text-secondary"><i class="fas fa-edit me-1"></i>Chờ duyệt</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-white">
+                <div class="text-muted small fw-semibold">KẾT THÚC</div>
+                <div class="fs-3 fw-bold text-info mt-1">@ViewBag.CompletedCount</div>
+                <div class="small text-info"><i class="fas fa-flag-checkered me-1"></i>Hoàn thành</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-white">
+                <div class="text-muted small fw-semibold">ĐÃ HỦY</div>
+                <div class="fs-3 fw-bold text-danger mt-1">@ViewBag.CancelledCount</div>
+                <div class="small text-danger"><i class="fas fa-times-circle me-1"></i>Dừng tổ chức</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3 h-100 bg-primary bg-opacity-10">
+                <div class="text-primary small fw-semibold">VAI TRÒ</div>
+                <div class="fs-5 fw-bold text-primary mt-1">@(User.IsInRole("Admin") ? "Admin" : "Ban Tổ Chức")</div>
+                <div class="small text-muted"><i class="fas fa-user-shield me-1"></i>Phân quyền</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="get" asp-action="MyEvents" class="row g-2 align-items-center">
+                <div class="col-12 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" value="@currentSearch" class="form-control bg-light border-0" placeholder="Tìm theo tên sự kiện, địa điểm...">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="categoryId" class="form-select bg-light border-0">
+                        <option value="">-- Tất cả danh mục --</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id" selected="@(currentCategoryId == cat.Id)">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="status" class="form-select bg-light border-0">
+                        <option value="All" selected="@(currentStatus == "All")">-- Tất cả trạng thái --</option>
+                        <option value="Draft" selected="@(currentStatus == "Draft")">Bản nháp (Draft)</option>
+                        <option value="Open" selected="@(currentStatus == "Open")">Mở đăng ký vé (Open)</option>
+                        <option value="Ongoing" selected="@(currentStatus == "Ongoing")">Đang diễn ra (Ongoing)</option>
+                        <option value="Completed" selected="@(currentStatus == "Completed")">Đã kết thúc (Completed)</option>
+                        <option value="Cancelled" selected="@(currentStatus == "Cancelled")">Đã hủy (Cancelled)</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                        <i class="fas fa-filter me-1"></i> Lọc
+                    </button>
+                    @if (!string.IsNullOrEmpty(currentSearch) || currentCategoryId.HasValue || currentStatus != "All")
+                    {
+                        <a asp-action="MyEvents" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                            <i class="fas fa-undo"></i>
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Events List / Table -->
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <div class="card-body">
+                <div class="mb-3 text-muted">
+                    <i class="fas fa-calendar-times fa-4x opacity-25"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Chưa có sự kiện nào</h5>
+                <p class="text-muted small mb-4">Bạn chưa tạo sự kiện nào hoặc không tìm thấy sự kiện phù hợp với bộ lọc.</p>
+                <a asp-action="Create" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">
+                    <i class="fas fa-plus me-1"></i> Tạo Sự Kiện Đầu Tiên
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="min-width: 280px;" class="ps-4">Sự kiện</th>
+                            <th scope="col">Danh mục</th>
+                            <th scope="col" style="min-width: 170px;">Thời gian</th>
+                            <th scope="col">Địa điểm</th>
+                            <th scope="col" class="text-center">Vé đã đăng ký</th>
+                            <th scope="col" class="text-center">Trạng thái</th>
+                            <th scope="col" class="text-end pe-4" style="min-width: 200px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ev in Model)
+                        {
+                            var regCount = ev.Registrations?.Count(r => r.Status != "Cancelled") ?? 0;
+                            var ticketPercent = ev.MaxTickets > 0 ? (int)Math.Min(100, Math.Round((double)regCount / ev.MaxTickets * 100)) : 0;
+                            var imgUrl = string.IsNullOrWhiteSpace(ev.ImageUrl) ? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&fit=crop" : ev.ImageUrl;
+
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <img src="@imgUrl" alt="@ev.Title" class="rounded-3 object-fit-cover me-3 shadow-sm" style="width: 60px; height: 60px;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&fit=crop';">
+                                        <div>
+                                            <a asp-action="Details" asp-route-id="@ev.Id" class="text-decoration-none text-dark fw-bold hover-primary d-block">
+                                                @ev.Title
+                                            </a>
+                                            <span class="text-muted small">
+                                                <i class="fas fa-clock me-1"></i>Tạo ngày @ev.CreatedAt.ToString("dd/MM/yyyy")
+                                            </span>
+                                            @if (User.IsInRole("Admin") && ev.Organizer != null)
+                                            {
+                                                <div class="badge bg-light text-secondary border small mt-1">
+                                                    <i class="fas fa-user-tie me-1"></i>@(ev.Organizer.FullName ?? ev.Organizer.UserName)
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1 rounded-pill">
+                                        @(ev.Category?.Name ?? "Chưa phân loại")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark">
+                                        <i class="fas fa-play-circle text-success me-1"></i>@ev.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-stop-circle text-danger me-1"></i>@ev.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="small text-dark" title="@ev.Location">
+                                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                        @(ev.Location.Length > 25 ? ev.Location.Substring(0, 25) + "..." : ev.Location)
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold small text-dark">@regCount / @ev.MaxTickets</div>
+                                    <div class="progress mt-1" style="height: 6px; width: 90px; margin: 0 auto;">
+                                        <div class="progress-bar @(ticketPercent >= 90 ? "bg-danger" : ticketPercent >= 60 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @ticketPercent%" aria-valuenow="@ticketPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.72rem;">@ticketPercent% vé đã đặt</small>
+                                </td>
+                                <td class="text-center">
+                                    @switch (ev.Status)
+                                    {
+                                        case "Open":
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">
+                                                <i class="fas fa-door-open me-1"></i> Mở vé
+                                            </span>
+                                            break;
+                                        case "Ongoing":
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 rounded-pill fw-semibold">
+                                                <i class="fas fa-broadcast-tower me-1"></i> Đang diễn ra
+                                            </span>
+                                            break;
+                                        case "Completed":
+                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-1 rounded-pill fw-semibold">
+                                                <i class="fas fa-flag-checkered me-1"></i> Kết thúc
+                                            </span>
+                                            break;
+                                        case "Cancelled":
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill fw-semibold">
+                                                <i class="fas fa-ban me-1"></i> Đã hủy
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 rounded-pill fw-semibold">
+                                                <i class="fas fa-pencil-alt me-1"></i> Bản nháp
+                                            </span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Đổi trạng thái nhanh">
+                                            <i class="fas fa-sync-alt me-1"></i> Trạng thái
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><h6 class="dropdown-header">Chuyển trạng thái sang:</h6></li>
+                                            <li>
+                                                <form asp-action="UpdateStatus" method="post" class="dropdown-item p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@ev.Id" />
+                                                    <input type="hidden" name="newStatus" value="Draft" />
+                                                    <button type="submit" class="btn btn-link dropdown-item py-2 text-secondary">
+                                                        <i class="fas fa-pencil-alt me-2"></i> Bản nháp (Draft)
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="UpdateStatus" method="post" class="dropdown-item p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@ev.Id" />
+                                                    <input type="hidden" name="newStatus" value="Open" />
+                                                    <button type="submit" class="btn btn-link dropdown-item py-2 text-success">
+                                                        <i class="fas fa-door-open me-2"></i> Mở bán vé (Open)
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="UpdateStatus" method="post" class="dropdown-item p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@ev.Id" />
+                                                    <input type="hidden" name="newStatus" value="Ongoing" />
+                                                    <button type="submit" class="btn btn-link dropdown-item py-2 text-warning">
+                                                        <i class="fas fa-broadcast-tower me-2"></i> Đang diễn ra (Ongoing)
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="UpdateStatus" method="post" class="dropdown-item p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@ev.Id" />
+                                                    <input type="hidden" name="newStatus" value="Completed" />
+                                                    <button type="submit" class="btn btn-link dropdown-item py-2 text-info">
+                                                        <i class="fas fa-flag-checkered me-2"></i> Đã kết thúc (Completed)
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <form asp-action="UpdateStatus" method="post" class="dropdown-item p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@ev.Id" />
+                                                    <input type="hidden" name="newStatus" value="Cancelled" />
+                                                    <button type="submit" class="btn btn-link dropdown-item py-2 text-danger">
+                                                        <i class="fas fa-ban me-2"></i> Hủy sự kiện (Cancelled)
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <a asp-action="Details" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-info rounded-pill px-2 ms-1" title="Chi tiết quản lý">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <a asp-action="Edit" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-primary rounded-pill px-2 ms-1" title="Chỉnh sửa thông tin">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <!-- Nút xóa kèm Modal xác nhận -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 ms-1" data-bs-toggle="modal" data-bs-target="#deleteModal-@ev.Id" title="Xóa sự kiện">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+
+                                    <!-- Modal Xác Nhận Xóa -->
+                                    <div class="modal fade" id="deleteModal-@ev.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@ev.Id" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content rounded-4 border-0 shadow">
+                                                <div class="modal-header border-0 pb-0">
+                                                    <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel-@ev.Id">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa sự kiện
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start py-3">
+                                                    <p class="mb-2">Bạn có chắc chắn muốn xóa vĩnh viễn sự kiện <strong>"@ev.Title"</strong> không?</p>
+                                                    @if (regCount > 0)
+                                                    {
+                                                        <div class="alert alert-warning small mb-0 rounded-3">
+                                                            <i class="fas fa-info-circle me-1"></i> Sự kiện này đã có <strong>@regCount người đăng ký vé</strong>. Hệ thống sẽ chặn xóa để bảo toàn dữ liệu. Bạn hãy đổi trạng thái sang <strong>[Đã Hủy]</strong>.
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-light border small mb-0 rounded-3 text-muted">
+                                                            Hành động này không thể hoàn tác sau khi xác nhận.
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="modal-footer border-0 pt-0">
+                                                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                    <form asp-action="Delete" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@ev.Id" />
+                                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                                                            <i class="fas fa-trash-alt me-1"></i> Xóa sự kiện
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-primary:hover {
+        color: #0d6efd !important;
+    }
+</style>
+

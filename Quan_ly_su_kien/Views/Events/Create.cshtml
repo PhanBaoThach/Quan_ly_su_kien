@@ -1,0 +1,216 @@
+@model Quan_ly_su_kien.ViewModels.EventFormViewModel
+@{
+    ViewData["Title"] = "Tạo Sự Kiện Mới";
+}
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
+                <li class="breadcrumb-item"><a asp-action="MyEvents" class="text-decoration-none text-muted">Quản Lý Sự Kiện</a></li>
+                <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">Tạo Sự Kiện Mới</li>
+            </ol>
+        </nav>
+        <h2 class="h3 fw-bold mb-1 text-dark">
+            <i class="fas fa-plus-circle text-primary me-2"></i>Khởi Tạo Sự Kiện Mới
+        </h2>
+        <p class="text-muted small mb-0">Điền đầy đủ các thông tin chi tiết để công bố hoặc lưu nháp sự kiện của bạn.</p>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+    {
+        <div class="alert alert-danger rounded-4 shadow-sm mb-4">
+            <div class="fw-bold mb-1"><i class="fas fa-exclamation-triangle me-1"></i> Vui lòng kiểm tra lại thông tin:</div>
+            <div asp-validation-summary="ModelOnly" class="small text-danger mb-0"></div>
+        </div>
+    }
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+            <!-- Cột trái: Thông tin chính -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Thông Tin Cơ Bản
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-semibold text-dark">
+                                Tiêu đề sự kiện <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control form-control-lg rounded-3" placeholder="Ví dụ: Hội thảo Công nghệ Trí tuệ Nhân tạo 2026..." />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CategoryId" class="form-label fw-semibold text-dark">
+                                    Danh mục sự kiện <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select rounded-3">
+                                    <option value="">-- Chọn danh mục --</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Status" class="form-label fw-semibold text-dark">
+                                    Trạng thái ban đầu <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Status" class="form-select rounded-3">
+                                    <option value="Draft">Bản nháp (Draft - Chưa công khai)</option>
+                                    <option value="Open">Mở đăng ký ngay (Open)</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="StartDate" class="form-label fw-semibold text-dark">
+                                    Thời gian bắt đầu <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="StartDate" type="datetime-local" class="form-control rounded-3" />
+                                <span asp-validation-for="StartDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EndDate" class="form-label fw-semibold text-dark">
+                                    Thời gian kết thúc <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="EndDate" type="datetime-local" class="form-control rounded-3" />
+                                <span asp-validation-for="EndDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label asp-for="Location" class="form-label fw-semibold text-dark">
+                                    Địa điểm tổ chức <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-map-marker-alt text-danger"></i></span>
+                                    <input asp-for="Location" class="form-control border-start-0 rounded-end-3" placeholder="Ví dụ: Trung tâm Hội nghị Quốc gia, Hà Nội hoặc Online qua Zoom" />
+                                </div>
+                                <span asp-validation-for="Location" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="MaxTickets" class="form-label fw-semibold text-dark">
+                                    Số lượng vé tối đa <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="MaxTickets" type="number" min="1" max="1000000" class="form-control rounded-3" />
+                                <span asp-validation-for="MaxTickets" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label asp-for="Description" class="form-label fw-semibold text-dark">
+                                Mô tả chi tiết sự kiện <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="Description" rows="8" class="form-control rounded-3" placeholder="Nhập tóm tắt, lịch trình, diễn giả, quyền lợi của người tham gia..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Ảnh bìa & Trợ giúp -->
+            <div class="col-lg-4">
+                <!-- Card Ảnh bìa -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-3">
+                            <i class="fas fa-image text-primary me-2"></i>Ảnh Bìa Sự Kiện
+                        </h5>
+
+                        <!-- Preview khung ảnh -->
+                        <div class="mb-3 text-center">
+                            <div class="ratio ratio-16x9 bg-light rounded-3 overflow-hidden border">
+                                <img id="previewImage" 
+                                     src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&fit=crop" 
+                                     alt="Xem trước ảnh bìa" 
+                                     class="object-fit-cover w-100 h-100" />
+                            </div>
+                            <div class="small text-muted mt-2">Xem trước ảnh bìa sự kiện</div>
+                        </div>
+
+                        <!-- Lựa chọn 1: Upload File -->
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label fw-semibold text-dark">
+                                <i class="fas fa-upload text-secondary me-1"></i> Tải ảnh từ máy tính
+                            </label>
+                            <input asp-for="ImageFile" type="file" accept="image/*" class="form-control rounded-3" id="fileUploadInput" onchange="previewFile(event)" />
+                            <small class="text-muted d-block mt-1">Định dạng hỗ trợ: JPG, PNG, WEBP (Tối đa 5MB)</small>
+                            <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                        </div>
+
+                        <div class="text-center my-2 text-muted fw-semibold small">--- HOẶC ---</div>
+
+                        <!-- Lựa chọn 2: Đường dẫn URL -->
+                        <div class="mb-0">
+                            <label asp-for="ImageUrl" class="form-label fw-semibold text-dark">
+                                <i class="fas fa-link text-secondary me-1"></i> Dán đường dẫn ảnh (URL)
+                            </label>
+                            <input asp-for="ImageUrl" class="form-control rounded-3" placeholder="https://example.com/photo.jpg" id="urlInput" oninput="previewUrl(this.value)" />
+                            <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Hướng dẫn & Lưu ý -->
+                <div class="card border-0 shadow-sm rounded-4 bg-light">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>Gợi ý cho Ban Tổ Chức
+                        </h6>
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li class="mb-1">Nếu chọn <strong>Bản nháp</strong>, sự kiện chưa xuất hiện trên trang Khám phá sự kiện.</li>
+                            <li class="mb-1">Sau khi tạo, bạn có thể tạo thêm các <strong>loại vé</strong> (vé VIP, vé thường, vé Early Bird) ở trang Chi tiết.</li>
+                            <li class="mb-0">Thời gian kết thúc phải diễn ra sau thời gian bắt đầu.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Nút thao tác -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+                        <i class="fas fa-save me-1"></i> Lưu Sự Kiện
+                    </button>
+                    <a asp-action="MyEvents" class="btn btn-outline-secondary rounded-pill fw-semibold">
+                        <i class="fas fa-times me-1"></i> Hủy & Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewFile(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+                // Xóa trắng trường URL để ưu tiên file tải lên
+                document.getElementById('urlInput').value = '';
+            }
+        }
+
+        function previewUrl(url) {
+            if (url && url.trim().length > 5) {
+                document.getElementById('previewImage').src = url.trim();
+                // Reset file upload
+                document.getElementById('fileUploadInput').value = '';
+            }
+        }
+    </script>
+}
+
