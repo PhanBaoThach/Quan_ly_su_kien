@@ -1,0 +1,196 @@
+﻿@model IEnumerable<Quan_ly_su_kien.Models.TicketType>
+@{
+    var eventItem = ViewBag.Event as Quan_ly_su_kien.Models.Event;
+    ViewData["Title"] = "Quản lý hạng vé - " + (eventItem?.Title ?? "");
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Quản Lý Loại Vé</h2>
+            <p class="text-muted mb-0">Sự kiện: <strong class="text-primary">@(eventItem?.Title)</strong></p>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTicketModal">
+                <i class="bi bi-plus-lg me-1"></i> Thêm Hạng Vé Mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Danh sách loại vé -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên Hạng Vé</th>
+                            <th>Giá Vé</th>
+                            <th>Đã Bán / Tổng Số</th>
+                            <th>Còn Lại</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-end me-3">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Chưa có loại vé nào được khởi tạo cho sự kiện này.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                int sold = item.QuantityTotal - item.QuantityAvailable;
+                                <tr>
+                                    <td class="fw-bold">
+                                        @item.TypeName
+                                        @if (!string.IsNullOrEmpty(item.Description))
+                                        {
+                                            <br />
+                                
+                                            <small class="text-muted fw-normal">@item.Description</small>
+                                        }
+                                    </td>
+                                    <td class="text-success fw-bold">@item.Price.ToString("N0") VNĐ</td>
+                                    <td>@sold / @item.QuantityTotal</td>
+                                    <td>
+                                        <span class="badge @(item.QuantityAvailable > 0 ? "bg-info" : "bg-danger")">
+                                            @item.QuantityAvailable
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge bg-success">Đang mở bán</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Tạm ngưng</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-warning me-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editTicketModal-@item.Id">
+                                            Sửa
+                                        </button>
+
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hạng vé này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                        </form>
+                                    </td>
+                                </tr>
+
+                                <!-- Modal Edit Ticket -->
+                                <div class="modal fade" id="editTicketModal-@item.Id" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form asp-action="Edit" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="Id" value="@item.Id" />
+                                                <input type="hidden" name="EventId" value="@item.EventId" />
+
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Cập Nhật Hạng Vé</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Tên loại vé</label>
+                                                        <input type="text" name="TypeName" class="form-control" value="@item.TypeName" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Giá vé (VNĐ)</label>
+                                                        <input type="number" name="Price" class="form-control" value="@item.Price" min="0" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Tổng số lượng phát hành</label>
+                                                        <input type="number" name="QuantityTotal" class="form-control" value="@item.QuantityTotal" min="1" required />
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Mô tả quyền lợi</label>
+                                                        <textarea name="Description" class="form-control" rows="2">@item.Description</textarea>
+                                                    </div>
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="activeCheck-@item.Id" @(item.IsActive ? "checked" : "") />
+                                                        <input type="hidden" name="IsActive" value="false" />
+                                                        <label class="form-check-label" for="activeCheck-@item.Id">Mở bán vé</label>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create Ticket -->
+<div class="modal fade" id="createTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="EventId" value="@(eventItem?.Id)" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Hạng Vé Mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên loại vé</label>
+                        <input type="text" name="TypeName" class="form-control" placeholder="VD: Vé VIP, Vé Standard..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Giá vé (VNĐ)</label>
+                        <input type="number" name="Price" class="form-control" placeholder="0" min="0" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tổng số lượng vé</label>
+                        <input type="number" name="QuantityTotal" class="form-control" placeholder="100" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả quyền lợi</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Nhập chi tiết quyền lợi của loại vé..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Thêm mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
