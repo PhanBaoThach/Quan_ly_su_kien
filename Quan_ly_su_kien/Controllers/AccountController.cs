@@ -153,6 +153,13 @@ namespace Quan_ly_su_kien.Controllers
                 return View(model);
             }
 
+            // Kiểm tra ràng buộc: chữ cái đầu của tên tài khoản bắt buộc phải viết hoa
+            if (!string.IsNullOrEmpty(model.UserName) && !char.IsUpper(model.UserName[0]))
+            {
+                ModelState.AddModelError("UserName", "Tên tài khoản bắt buộc chữ cái đầu phải viết hoa.");
+                return View(model);
+            }
+
             try
             {
                 var existingByUserName = await _userManager.FindByNameAsync(model.UserName);

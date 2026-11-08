@@ -230,7 +230,8 @@
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Tên đăng nhập <span class="text-danger">*</span></label>
-                            <input type="text" name="UserName" class="form-control" placeholder="nguyenvana" required />
+                            <input type="text" name="UserName" class="form-control" placeholder="Ví dụ: Thach123" pattern="^[A-ZÀ-Ỹ].*" title="Chữ cái đầu phải viết hoa" required />
+                            <small class="text-muted" style="font-size: 0.72rem;">Chữ cái đầu phải viết hoa (A-Z)</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Số điện thoại</label>

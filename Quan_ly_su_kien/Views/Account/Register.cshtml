@@ -35,9 +35,10 @@
                             <label asp-for="UserName" class="form-label fw-semibold text-secondary small"></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-user"></i></span>
-                                <input asp-for="UserName" class="form-control border-start-0 ps-0" placeholder="nguyenvana" />
+                                <input asp-for="UserName" class="form-control border-start-0 ps-0" placeholder="Ví dụ: Thach123" />
                             </div>
                             <span asp-validation-for="UserName" class="text-danger small"></span>
+                            <div class="text-muted" style="font-size: 0.72rem;"><i class="fas fa-info-circle me-1"></i>Chữ cái đầu phải viết hoa (A-Z)</div>
                         </div>
                         <!-- Số điện thoại -->
                         <div class="col-md-6">

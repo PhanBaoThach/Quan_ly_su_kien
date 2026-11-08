@@ -148,6 +148,12 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction("Users");
             }
 
+            if (!string.IsNullOrEmpty(model.UserName) && !char.IsUpper(model.UserName[0]))
+            {
+                TempData["ErrorMessage"] = "Tên tài khoản bắt buộc chữ cái đầu phải viết hoa.";
+                return RedirectToAction("Users");
+            }
+
             var existingUser = await _userManager.FindByNameAsync(model.UserName)
                                ?? await _userManager.FindByEmailAsync(model.Email);
 
