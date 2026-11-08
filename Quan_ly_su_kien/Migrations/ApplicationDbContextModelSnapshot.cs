@@ -17,7 +17,7 @@ namespace Quan_ly_su_kien.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -555,13 +555,23 @@ namespace Quan_ly_su_kien.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<int>("EventId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Quantity")
+                    b.Property<int>("QuantityAvailable")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityTotal")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SaleEnd")
@@ -569,9 +579,6 @@ namespace Quan_ly_su_kien.Migrations
 
                     b.Property<DateTime>("SaleStart")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("SoldQuantity")
-                        .HasColumnType("int");
 
                     b.Property<string>("TypeName")
                         .IsRequired()
