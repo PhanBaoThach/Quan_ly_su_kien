@@ -1,0 +1,450 @@
+﻿@model IEnumerable<Quan_ly_su_kien.Models.Guest>
+@{
+    ViewData["Title"] = "Quản Lý Khách Mời & Check-in";
+    int? selectedEventId = ViewBag.SelectedEventId as int?;
+    string search = ViewBag.Search as string ?? "";
+    string status = ViewBag.Status as string ?? "all";
+
+    int total = ViewBag.TotalGuests ?? 0;
+    int checkedIn = ViewBag.CheckedInCount ?? 0;
+    int uncheckedCount = ViewBag.UncheckedCount ?? 0;
+    int percent = total > 0 ? (int)Math.Round((double)checkedIn * 100 / total) : 0;
+}
+
+@section Styles {
+    <style>
+        .guest-hero-banner {
+            background: linear-gradient(135deg, #0b1329 0%, #162447 60%, #1f4068 100%);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-modern {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.15rem;
+            padding: 1.35rem;
+            transition: all 0.25s ease;
+            height: 100%;
+        }
+
+            .stat-card-modern:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.12);
+            }
+
+        .stat-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+
+        .filter-glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.15rem;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+        }
+
+        .guest-table-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        .guest-table thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .guest-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .avatar-gradient {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: #fff;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .code-pill {
+            font-family: 'Consolas', monospace;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px dashed #93c5fd;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .btn-action-icon {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+        }
+
+        .vip-ticket-box {
+            background: linear-gradient(145deg, #0b1329 0%, #1e293b 100%);
+            color: #fff;
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .qr-white-frame {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 1rem;
+            display: inline-block;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+}
+
+<div class="container py-4">
+    <!-- Hero Banner Header -->
+    <div class="guest-hero-banner shadow-sm mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25 rounded-pill px-3 py-1 mb-2">
+                    <i class="fas fa-sparkles me-1"></i> US-08 - Quản Lý Khách Mời &amp; Check-in
+                </span>
+                <h2 class="fw-bold mb-1">Quản Lý Khách Mời &amp; Diễn Giả</h2>
+                <p class="text-white-50 mb-0">Cấp thư mời điện tử QR Code, phân loại khách VIP và điểm danh trực tiếp tại sự kiện</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="CheckIn" asp-route-eventId="@selectedEventId"
+                   class="btn btn-success btn-lg rounded-pill px-4 fw-semibold shadow">
+                    <i class="fas fa-qrcode me-2"></i>Mở Cổng Check-in
+                </a>
+                <a asp-action="Create" asp-route-eventId="@selectedEventId"
+                   class="btn btn-primary btn-lg rounded-pill px-4 fw-semibold shadow">
+                    <i class="fas fa-user-plus me-2"></i>Thêm Khách Mời
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3 Thẻ Thống Kê -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card-modern d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Tổng Khách Mời</span>
+                    <h2 class="fw-bold text-dark mt-1 mb-0">@total</h2>
+                    <small class="text-primary fw-medium">Danh sách chính thức</small>
+                </div>
+                <div class="stat-icon-box bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card-modern d-flex align-items-center justify-content-between">
+                <div class="w-100 pe-3">
+                    <span class="text-muted small fw-bold text-uppercase">Đã Check-in</span>
+                    <div class="d-flex align-items-baseline gap-2 mt-1">
+                        <h2 class="fw-bold text-success mb-0">@checkedIn</h2>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill">@(percent)%</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px; border-radius: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @(percent)%"></div>
+                    </div>
+                </div>
+                <div class="stat-icon-box bg-success bg-opacity-10 text-success flex-shrink-0">
+                    <i class="fas fa-user-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card-modern d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Chưa Đến Tham Dự</span>
+                    <h2 class="fw-bold text-warning mt-1 mb-0">@uncheckedCount</h2>
+                    <small class="text-muted">Đang chờ quét mã</small>
+                </div>
+                <div class="stat-icon-box bg-warning bg-opacity-15 text-warning">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bộ Lọc Tìm Kiếm -->
+    <div class="filter-glass-card p-3 p-md-4 mb-4">
+        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fas fa-calendar-alt text-primary me-1"></i> Lọc theo sự kiện
+                </label>
+                <select name="eventId" class="form-select rounded-3" asp-items="ViewBag.Events">
+                    <option value="">-- Tất cả sự kiện của bạn --</option>
+                </select>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fas fa-search text-primary me-1"></i> Tìm kiếm thông tin
+                </label>
+                <input type="text" name="search" value="@search" class="form-control rounded-3"
+                       placeholder="Nhập tên, email, chức danh hoặc mã INV..." />
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fas fa-check-double text-primary me-1"></i> Trạng thái
+                </label>
+                <select name="status" class="form-select rounded-3">
+                    @if (status == "all")
+                    {
+                        <option value="all" selected>Tất cả trạng thái</option>
+                    }
+                    else
+                    {
+                        <option value="all">Tất cả trạng thái</option>
+                    }
+
+                    @if (status == "checked")
+                    {
+                        <option value="checked" selected>Đã check-in</option>
+                    }
+                    else
+                    {
+                        <option value="checked">Đã check-in</option>
+                    }
+
+                    @if (status == "unchecked")
+                    {
+                        <option value="unchecked" selected>Chưa check-in</option>
+                    }
+                    else
+                    {
+                        <option value="unchecked">Chưa check-in</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 w-100 fw-semibold">
+                    <i class="fas fa-filter me-1"></i> Lọc
+                </button>
+                <a asp-action="Index" class="btn btn-light border rounded-3 px-3" title="Đặt lại bộ lọc">
+                    <i class="fas fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bảng Danh Sách Khách Mời -->
+    <div class="guest-table-card">
+        <div class="table-responsive">
+            <table class="table guest-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Khách mời / Diễn giả</th>
+                        <th>Sự kiện tham dự</th>
+                        <th>Mã thư mời</th>
+                        <th>Trạng thái điểm danh</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="py-3">
+                                    <div class="mb-3 text-muted opacity-50">
+                                        <i class="fas fa-user-slash fa-3x"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark">Chưa có khách mời nào</h5>
+                                    <p class="text-muted small mb-3">Hãy thêm diễn giả hoặc khách mời VIP để tạo mã QR điểm danh.</p>
+                                    <a asp-action="Create" asp-route-eventId="@selectedEventId" class="btn btn-primary rounded-pill px-4">
+                                        <i class="fas fa-plus me-1"></i> Thêm khách mời đầu tiên
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var initial = !string.IsNullOrEmpty(item.FullName) ? item.FullName.Substring(0, 1).ToUpper() : "G";
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-gradient">@initial</div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">@item.FullName</div>
+                                            <div class="small text-muted"><i class="far fa-envelope me-1"></i>@item.Email</div>
+                                            @if (!string.IsNullOrEmpty(item.RoleTitle))
+                                            {
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill mt-1">
+                                                    <i class="fas fa-award me-1"></i>@item.RoleTitle
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@item.Event?.Title</div>
+                                    <small class="text-muted">ID Sự kiện: #@item.EventId</small>
+                                </td>
+                                <td>
+                                    <span class="code-pill">@item.InvitationCode</span>
+                                </td>
+                                <td>
+                                    @if (item.IsCheckedIn)
+                                    {
+                                        <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
+                                            <i class="fas fa-circle-check me-1"></i> Đã check-in
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-15 text-dark border border-warning border-opacity-50 rounded-pill px-3 py-2 fw-semibold">
+                                            <i class="fas fa-clock me-1 text-warning"></i> Chưa đến
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-inline-flex gap-1">
+                                        <button type="button" class="btn btn-outline-primary btn-action-icon"
+                                                onclick="showQrModal('@item.FullName', '@item.Email', '@(item.RoleTitle ?? "Khách mời danh dự")', '@item.Event?.Title', '@item.InvitationCode')"
+                                                title="Xem Thư Mời QR">
+                                            <i class="fas fa-qrcode"></i>
+                                        </button>
+
+                                        <form asp-action="ToggleCheckIn" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="currentEventId" value="@selectedEventId" />
+                                            <button type="submit"
+                                                    class="btn @(item.IsCheckedIn ? "btn-outline-warning" : "btn-success") btn-action-icon"
+                                                    title="@(item.IsCheckedIn ? "Hủy trạng thái check-in" : "Xác nhận Check-in ngay")">
+                                                <i class="fas @(item.IsCheckedIn ? "fa-rotate-left" : "fa-check")"></i>
+                                            </button>
+                                        </form>
+
+                                        <a asp-action="Edit" asp-route-id="@item.Id"
+                                           class="btn btn-outline-secondary btn-action-icon" title="Chỉnh sửa">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+
+                                        <form asp-action="Delete" method="post" class="d-inline"
+                                              onsubmit="return confirm('Xác nhận xóa khách mời này khỏi danh sách?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-outline-danger btn-action-icon" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thư Mời Điện Tử VIP -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="vip-ticket-box shadow-lg text-center">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                    <span class="badge bg-primary rounded-pill px-3 py-1">EVENTMANA PASS</span>
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold" id="qrRole"></span>
+                </div>
+
+                <h3 class="fw-bold mb-1" id="qrName"></h3>
+                <p class="text-white-50 small mb-4" id="qrEmail"></p>
+
+                <div class="qr-white-frame mb-3">
+                    <div id="qrcodeContainer"></div>
+                </div>
+
+                <div class="fs-5 fw-bold text-info mb-1" style="letter-spacing: 2px;" id="qrCodeText"></div>
+                <p class="small text-white-50 mb-4">Vui lòng xuất trình mã này tại quầy lễ tân</p>
+
+                <div class="border-top border-secondary border-opacity-50 pt-3 mb-3">
+                    <small class="text-white-50 d-block">SỰ KIỆN THAM DỰ</small>
+                    <strong class="fs-6 text-white" id="qrEvent"></strong>
+                </div>
+
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="copyCode()">
+                        <i class="fas fa-copy me-1"></i> Sao chép mã
+                    </button>
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let currentCode = "";
+        function showQrModal(name, email, role, eventTitle, code) {
+            currentCode = code;
+            document.getElementById("qrName").innerText = name;
+            document.getElementById("qrEmail").innerText = email;
+            document.getElementById("qrRole").innerText = role;
+            document.getElementById("qrEvent").innerText = eventTitle;
+            document.getElementById("qrCodeText").innerText = code;
+
+            const container = document.getElementById("qrcodeContainer");
+            container.innerHTML = "";
+            new QRCode(container, {
+                text: code,
+                width: 175,
+                height: 175,
+                colorDark: "#0b1329",
+                colorLight: "#ffffff"
+            });
+
+            new bootstrap.Modal(document.getElementById('qrModal')).show();
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText(currentCode);
+            alert("Đã sao chép mã thư mời: " + currentCode);
+        }
+    </script>
+}
