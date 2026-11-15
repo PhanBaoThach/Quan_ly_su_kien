@@ -9,10 +9,6 @@ using Quan_ly_su_kien.ViewModels;
 
 namespace Quan_ly_su_kien.Controllers
 {
-    /// <summary>
-    /// PHÂN HỆ QUẢN LÝ SỰ KIỆN (Sprint 2 - US-04 - Phan Bảo Thạch)
-    /// Dành cho Ban Tổ Chức (Organizer) và Quản Trị Viên (Admin)
-    /// </summary>
     [Authorize(Roles = "Organizer,Admin")]
     public class EventsController : Controller
     {
@@ -33,9 +29,6 @@ namespace Quan_ly_su_kien.Controllers
             _logger = logger;
         }
 
-        // =========================================================================
-        // 1. DANH SÁCH SỰ KIỆN CỦA BAN TỔ CHỨC (MyEvents)
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> MyEvents(string? search, int? categoryId, string? status)
         {
@@ -49,13 +42,11 @@ namespace Quan_ly_su_kien.Controllers
                 .Include(e => e.Registrations)
                 .AsQueryable();
 
-            // Nếu không phải Admin thì chỉ xem sự kiện do chính mình tổ chức
             if (!User.IsInRole("Admin"))
             {
                 query = query.Where(e => e.OrganizerId == user.Id);
             }
 
-            // Thống kê nhanh theo trạng thái (cho Dashboard cards)
             var allMyEvents = await query.ToListAsync();
             ViewBag.TotalEvents = allMyEvents.Count;
             ViewBag.OpenCount = allMyEvents.Count(e => e.Status == "Open");
@@ -63,7 +54,6 @@ namespace Quan_ly_su_kien.Controllers
             ViewBag.CompletedCount = allMyEvents.Count(e => e.Status == "Completed");
             ViewBag.CancelledCount = allMyEvents.Count(e => e.Status == "Cancelled");
 
-            // Lọc theo từ khóa tìm kiếm
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim().ToLower();
@@ -71,13 +61,11 @@ namespace Quan_ly_su_kien.Controllers
                                       || e.Location.ToLower().Contains(search));
             }
 
-            // Lọc theo danh mục
             if (categoryId.HasValue && categoryId.Value > 0)
             {
                 query = query.Where(e => e.CategoryId == categoryId.Value);
             }
 
-            // Lọc theo trạng thái
             if (!string.IsNullOrWhiteSpace(status) && status != "All")
             {
                 query = query.Where(e => e.Status == status);
@@ -93,17 +81,14 @@ namespace Quan_ly_su_kien.Controllers
             return View(events);
         }
 
-        // =========================================================================
-        // 2. KHỞI TẠO SỰ KIỆN MỚI (Create)
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             await PopulateCategoriesDropdown();
             var model = new EventFormViewModel
             {
-                StartDate = DateTime.Now.AddDays(7).Date.AddHours(8), // Mặc định 8h sáng sau 7 ngày
-                EndDate = DateTime.Now.AddDays(7).Date.AddHours(17),  // Mặc định 17h chiều
+                StartDate = DateTime.Now.AddDays(7).Date.AddHours(8),
+                EndDate = DateTime.Now.AddDays(7).Date.AddHours(17),
                 Status = "Draft",
                 MaxTickets = 200
             };
@@ -125,14 +110,12 @@ namespace Quan_ly_su_kien.Controllers
 
             try
             {
-                // Xử lý upload ảnh bìa (nếu người dùng tải file lên)
                 string? finalImageUrl = model.ImageUrl;
                 if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     finalImageUrl = await ProcessUploadedFile(model.ImageFile);
                 }
 
-                // Nếu không tải ảnh và không nhập link, sử dụng ảnh mặc định
                 if (string.IsNullOrWhiteSpace(finalImageUrl))
                 {
                     finalImageUrl = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop&q=80";
@@ -168,9 +151,6 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // =========================================================================
-        // 3. CHỈNH SỬA SỰ KIỆN (Edit)
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -184,7 +164,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            // Kiểm soát quyền: Chỉ Admin hoặc chính tác giả mới được sửa
             if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
@@ -228,7 +207,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            // Kiểm soát quyền: Chỉ Admin hoặc chính tác giả mới được sửa
             if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
@@ -236,7 +214,6 @@ namespace Quan_ly_su_kien.Controllers
 
             try
             {
-                // Nếu có tải ảnh mới lên thì cập nhật ảnh mới
                 if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     eventItem.ImageUrl = await ProcessUploadedFile(model.ImageFile);
@@ -270,9 +247,6 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // =========================================================================
-        // 4. XEM CHI TIẾT SỰ KIỆN GÓC NHÌN QUẢN TRỊ (Details)
-        // =========================================================================
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -294,7 +268,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            // Kiểm soát quyền truy cập
             if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
@@ -303,9 +276,6 @@ namespace Quan_ly_su_kien.Controllers
             return View(eventItem);
         }
 
-        // =========================================================================
-        // 5. CHUYỂN ĐỔI NHANH TRẠNG THÁI SỰ KIỆN (UpdateStatus)
-        // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, string newStatus)
@@ -325,7 +295,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction("AccessDenied", "Account");
             }
 
-            // Kiểm tra trạng thái hợp lệ
             string[] validStatuses = { "Draft", "Open", "Ongoing", "Completed", "Cancelled" };
             if (!validStatuses.Contains(newStatus))
             {
@@ -349,9 +318,6 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction(nameof(MyEvents));
         }
 
-        // =========================================================================
-        // 6. XÓA SỰ KIỆN (Delete)
-        // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -374,7 +340,6 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction("AccessDenied", "Account");
             }
 
-            // Nghiệp vụ bảo toàn: Không cho phép xóa sự kiện đã có người đăng ký vé
             if (eventItem.Registrations.Any(r => r.Status != "Cancelled"))
             {
                 TempData["ErrorMessage"] = $"Không thể xóa sự kiện '{eventItem.Title}' vì đã có {eventItem.Registrations.Count} người đăng ký vé! Bạn hãy chuyển trạng thái sang [Đã Hủy].";
@@ -388,9 +353,6 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction(nameof(MyEvents));
         }
 
-        // =========================================================================
-        // HÀM TIỆN ÍCH NỘI BỘ (Helper Methods)
-        // =========================================================================
         private async Task PopulateCategoriesDropdown()
         {
             var categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.Name).ToListAsync();

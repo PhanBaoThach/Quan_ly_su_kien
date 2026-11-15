@@ -25,7 +25,6 @@ namespace Quan_ly_su_kien.Controllers
             _logger = logger;
         }
 
-        // GET: /Account/Login
         [HttpGet]
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
@@ -39,7 +38,6 @@ namespace Quan_ly_su_kien.Controllers
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
-        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
@@ -89,7 +87,6 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // POST: /Account/QuickLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> QuickLogin(string roleName)
@@ -127,7 +124,6 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // GET: /Account/Register
         [HttpGet]
         public async Task<IActionResult> Register(string? returnUrl = null)
         {
@@ -141,7 +137,6 @@ namespace Quan_ly_su_kien.Controllers
             return View(new RegisterViewModel());
         }
 
-        // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
@@ -153,7 +148,6 @@ namespace Quan_ly_su_kien.Controllers
                 return View(model);
             }
 
-            // Kiểm tra ràng buộc: chữ cái đầu của tên tài khoản bắt buộc phải viết hoa
             if (!string.IsNullOrEmpty(model.UserName) && !char.IsUpper(model.UserName[0]))
             {
                 ModelState.AddModelError("UserName", "Tên tài khoản bắt buộc chữ cái đầu phải viết hoa.");
@@ -220,7 +214,6 @@ namespace Quan_ly_su_kien.Controllers
             }
         }
 
-        // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -230,14 +223,12 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction("Login", "Account", new { area = "" });
         }
 
-        // GET: /Account/AccessDenied
         [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
         }
 
-        // GET: /Account/Profile
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Profile()
@@ -265,7 +256,6 @@ namespace Quan_ly_su_kien.Controllers
             return View(model);
         }
 
-        // POST: /Account/UpdateProfile
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -299,7 +289,6 @@ namespace Quan_ly_su_kien.Controllers
             return RedirectToAction("Profile");
         }
 
-        // POST: /Account/ChangePassword
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]

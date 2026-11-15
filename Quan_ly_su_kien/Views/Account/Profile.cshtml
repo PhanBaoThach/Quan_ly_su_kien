@@ -5,7 +5,6 @@
 
 <div class="container py-5">
     <div class="row g-4">
-        <!-- Cột thông tin thẻ tóm tắt -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-4 text-center">
                 <div class="avatar-circle mx-auto mb-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 80px; height: 80px; font-size: 2rem;">
@@ -36,7 +35,6 @@
             </div>
         </div>
 
-        <!-- Cột chỉnh sửa & đổi mật khẩu -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm p-4">
                 <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
@@ -53,7 +51,6 @@
                 </ul>
 
                 <div class="tab-content" id="profileTabContent">
-                    <!-- Tab Thông tin cá nhân -->
                     <div class="tab-pane fade show active" id="info-pane">
                         <form asp-controller="Account" asp-action="UpdateProfile" method="post">
                             @Html.AntiForgeryToken()
@@ -87,7 +84,6 @@
                         </form>
                     </div>
 
-                    <!-- Tab Đổi mật khẩu -->
                     <div class="tab-pane fade" id="password-pane">
                         <form asp-controller="Account" asp-action="ChangePassword" method="post">
                             @Html.AntiForgeryToken()
@@ -120,4 +116,3 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-

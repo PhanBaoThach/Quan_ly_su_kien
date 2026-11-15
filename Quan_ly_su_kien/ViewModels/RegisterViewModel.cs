@@ -37,7 +37,7 @@ namespace Quan_ly_su_kien.ViewModels
 
         [Required(ErrorMessage = "Vui lòng chọn vai trò")]
         [Display(Name = "Đăng ký với vai trò")]
-        public string Role { get; set; } = "Attendee"; // Attendee or Organizer
+        public string Role { get; set; } = "Attendee";
     }
 }
 

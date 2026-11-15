@@ -12,7 +12,6 @@
 }
 
 <div class="container py-4">
-    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb mb-0 small">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
@@ -21,7 +20,6 @@
         </ol>
     </nav>
 
-    <!-- Event Banner & Header Card -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div class="position-relative" style="height: 260px;">
             <img src="@imgUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop';">
@@ -72,7 +70,6 @@
         </div>
     </div>
 
-    <!-- Quick Metrics Bar -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
@@ -132,7 +129,6 @@
         </div>
     </div>
 
-    <!-- Main Content Details Tabs -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
             <ul class="nav nav-tabs card-header-tabs" id="eventTab" role="tablist">
@@ -161,7 +157,6 @@
 
         <div class="card-body p-4">
             <div class="tab-content" id="eventTabContent">
-                <!-- TAB 1: TỔNG QUAN & MÔ TẢ -->
                 <div class="tab-pane fade show active" id="overview" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-lg-7">
@@ -229,7 +224,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: CÁC LOẠI VÉ -->
                 <div class="tab-pane fade" id="tickets" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark mb-0">Cấu hình các loại vé</h5>
@@ -244,7 +238,7 @@
                             <table class="table table-hover align-middle border rounded-3 mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Tên loại vé</th>
+                                         <th>Tên loại vé</th>
                                         <th>Giá vé</th>
                                         <th class="text-center">Số lượng</th>
                                         <th class="text-center">Đã bán</th>
@@ -281,7 +275,6 @@
                     }
                 </div>
 
-                <!-- TAB 3: NGƯỜI ĐĂNG KÝ VÉ -->
                 <div class="tab-pane fade" id="registrations" role="tabpanel">
                     <h5 class="fw-bold text-dark mb-3">Danh sách người đăng ký vé</h5>
 
@@ -354,7 +347,6 @@
                     }
                 </div>
 
-                <!-- TAB 4: KHÁCH MỜI / VIP -->
                 <div class="tab-pane fade" id="guests" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark mb-0">Danh sách khách mời đặc biệt & Diễn giả</h5>
@@ -422,4 +414,3 @@
         text-shadow: 0 2px 8px rgba(0,0,0,0.7);
     }
 </style>
-

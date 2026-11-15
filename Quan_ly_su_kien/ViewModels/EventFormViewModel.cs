@@ -48,7 +48,6 @@ namespace Quan_ly_su_kien.ViewModels
         [Display(Name = "Danh mục sự kiện")]
         public int CategoryId { get; set; }
 
-        // Kiểm tra hợp lệ thời gian kết thúc phải sau thời gian bắt đầu
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndDate <= StartDate)
@@ -60,4 +59,3 @@ namespace Quan_ly_su_kien.ViewModels
         }
     }
 }
-

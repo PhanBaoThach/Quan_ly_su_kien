@@ -4,7 +4,6 @@
 }
 
 <div class="container py-4">
-    <!-- Header -->
     <div class="mb-4">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-1 small">
@@ -31,7 +30,6 @@
         @Html.AntiForgeryToken()
 
         <div class="row g-4">
-            <!-- Cột trái: Thông tin chính -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-4">
@@ -117,16 +115,13 @@
                 </div>
             </div>
 
-            <!-- Cột phải: Ảnh bìa & Trợ giúp -->
             <div class="col-lg-4">
-                <!-- Card Ảnh bìa -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold text-dark mb-3">
                             <i class="fas fa-image text-primary me-2"></i>Ảnh Bìa Sự Kiện
                         </h5>
 
-                        <!-- Preview khung ảnh -->
                         <div class="mb-3 text-center">
                             <div class="ratio ratio-16x9 bg-light rounded-3 overflow-hidden border">
                                 <img id="previewImage" 
@@ -137,7 +132,6 @@
                             <div class="small text-muted mt-2">Xem trước ảnh bìa sự kiện</div>
                         </div>
 
-                        <!-- Lựa chọn 1: Upload File -->
                         <div class="mb-3">
                             <label asp-for="ImageFile" class="form-label fw-semibold text-dark">
                                 <i class="fas fa-upload text-secondary me-1"></i> Tải ảnh từ máy tính
@@ -149,7 +143,6 @@
 
                         <div class="text-center my-2 text-muted fw-semibold small">--- HOẶC ---</div>
 
-                        <!-- Lựa chọn 2: Đường dẫn URL -->
                         <div class="mb-0">
                             <label asp-for="ImageUrl" class="form-label fw-semibold text-dark">
                                 <i class="fas fa-link text-secondary me-1"></i> Dán đường dẫn ảnh (URL)
@@ -160,7 +153,6 @@
                     </div>
                 </div>
 
-                <!-- Card Hướng dẫn & Lưu ý -->
                 <div class="card border-0 shadow-sm rounded-4 bg-light">
                     <div class="card-body p-4">
                         <h6 class="fw-bold text-dark mb-2">
@@ -174,7 +166,6 @@
                     </div>
                 </div>
 
-                <!-- Nút thao tác -->
                 <div class="d-grid gap-2 mt-4">
                     <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
                         <i class="fas fa-save me-1"></i> Lưu Sự Kiện
@@ -199,7 +190,6 @@
                     document.getElementById('previewImage').src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
-                // Xóa trắng trường URL để ưu tiên file tải lên
                 document.getElementById('urlInput').value = '';
             }
         }
@@ -207,10 +197,8 @@
         function previewUrl(url) {
             if (url && url.trim().length > 5) {
                 document.getElementById('previewImage').src = url.trim();
-                // Reset file upload
                 document.getElementById('fileUploadInput').value = '';
             }
         }
     </script>
 }
-
