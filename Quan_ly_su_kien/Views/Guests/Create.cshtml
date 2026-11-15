@@ -1,0 +1,87 @@
+﻿@model Quan_ly_su_kien.Models.Guest
+@{
+    ViewData["Title"] = "Thêm Khách Mời Mới";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="p-4 text-white" style="background: linear-gradient(135deg, #0b1329 0%, #0d6efd 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="fas fa-user-plus fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Thêm Khách Mời / Diễn Giả</h4>
+                            <small class="text-white-50">Hệ thống sẽ tự động khởi tạo mã QR thư mời định danh</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-3"></div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark">
+                                <i class="fas fa-calendar-check text-primary me-1"></i> Sự kiện tổ chức <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="EventId" class="form-select form-select-lg rounded-3" asp-items="ViewBag.EventId"></select>
+                            <span asp-validation-for="EventId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label fw-bold text-dark">
+                                    Họ và tên khách mời <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="FullName" class="form-control form-control-lg rounded-3" placeholder="VD: TS. Nguyễn Văn A" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label fw-bold text-dark">
+                                    Email nhận vé mời <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Email" class="form-control form-control-lg rounded-3" placeholder="speaker@domain.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="RoleTitle" class="form-label fw-bold text-dark">Vai trò / Chức danh</label>
+                                <input asp-for="RoleTitle" class="form-control form-control-lg rounded-3" placeholder="VD: Diễn giả chính, Khách VIP..." />
+                                <span asp-validation-for="RoleTitle" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="InvitationCode" class="form-label fw-bold text-dark">Mã thư mời (Auto QR)</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light text-primary"><i class="fas fa-qrcode"></i></span>
+                                    <input asp-for="InvitationCode" class="form-control bg-light fw-bold text-primary" readonly />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border mb-4">
+                            <div class="form-check form-switch mb-0">
+                                <input asp-for="IsCheckedIn" class="form-check-input" role="switch" />
+                                <label asp-for="IsCheckedIn" class="form-check-label fw-semibold text-dark">
+                                    Xác nhận khách mời đã có mặt (Check-in ngay)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <a asp-action="Index" class="btn btn-light border btn-lg rounded-pill px-4">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-semibold shadow-sm">
+                                <i class="fas fa-check-circle me-2"></i>Lưu & Tạo Mã QR
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

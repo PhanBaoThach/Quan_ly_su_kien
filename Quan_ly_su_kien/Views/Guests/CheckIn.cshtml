@@ -1,0 +1,279 @@
+﻿@model IEnumerable<Quan_ly_su_kien.Models.Guest>
+@{
+    ViewData["Title"] = "Cổng Điểm Danh Check-in QR";
+}
+
+<style>
+    .checkin-header {
+        background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+        border-radius: 1.25rem;
+        padding: 1.75rem 2rem;
+        color: #fff;
+    }
+
+    .scanner-box {
+        background: #0f172a;
+        border-radius: 1rem;
+        overflow: hidden;
+        position: relative;
+        min-height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #334155;
+    }
+
+    .history-item-enter {
+        animation: slideDown 0.35s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="checkin-header shadow-sm mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1 mb-2">
+                <i class="fas fa-satellite-dish me-1"></i> LIVE CHECK-IN GATE
+            </span>
+            <h2 class="fw-bold mb-1">Cổng Quét Mã QR & Điểm Danh Khách Mời</h2>
+            <p class="text-white-50 mb-0">Hỗ trợ quét trực tiếp bằng Webcam/Camera điện thoại hoặc nhập mã thư mời</p>
+        </div>
+        <a asp-action="Index" class="btn btn-light text-dark rounded-pill px-4 fw-semibold shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột Trái: Khu vực quét & nhập mã -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">
+                            <i class="fas fa-filter text-success me-1"></i> Sự kiện đang mở cổng check-in
+                        </label>
+                        <select id="eventFilter" class="form-select form-select-lg rounded-3" asp-items="ViewBag.Events">
+                            <option value="">-- Tất cả sự kiện --</option>
+                        </select>
+                    </div>
+
+                    <!-- Khung Camera -->
+                    <div class="scanner-box mb-3" id="scannerWrapper">
+                        <div id="reader" style="width: 100%;"></div>
+                        <div id="cameraPlaceholder" class="text-center text-white-50 p-4">
+                            <i class="fas fa-camera fa-3x mb-3 text-success opacity-75"></i>
+                            <p class="mb-0 fw-medium">Camera đang tắt. Bấm nút bên dưới để bắt đầu quét QR</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 mb-4">
+                        <button type="button" id="btnStartCam" class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="startScanner()">
+                            <i class="fas fa-video me-2"></i>Bật Camera Quét QR
+                        </button>
+                        <button type="button" id="btnStopCam" class="btn btn-outline-danger rounded-pill px-4 fw-semibold d-none" onclick="stopScanner()">
+                            <i class="fas fa-video-slash me-2"></i>Tắt Camera
+                        </button>
+                    </div>
+
+                    <div class="position-relative text-center my-3">
+                        <hr class="text-muted" />
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 small fw-bold text-muted">
+                            HOẶC NHẬP MÃ THỦ CÔNG
+                        </span>
+                    </div>
+
+                    <!-- Ô nhập mã -->
+                    <div class="input-group input-group-lg mb-3 shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-light border-end-0 text-success">
+                            <i class="fas fa-ticket-alt"></i>
+                        </span>
+                        <input type="text" id="manualCodeInput" class="form-control border-start-0 fw-bold text-uppercase"
+                               placeholder="VD: INV-8F92A1B4" autofocus />
+                        <button class="btn btn-success px-4 fw-bold" type="button" onclick="submitCode()">
+                            <i class="fas fa-check-circle me-1"></i> Xác nhận
+                        </button>
+                    </div>
+
+                    <!-- Thông báo kết quả check-in -->
+                    <div id="scanResultBox" class="alert d-none rounded-4 border-0 shadow-sm mb-0" role="alert"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Lịch sử vừa điểm danh -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-clock-rotate-left text-success me-2"></i>Lịch Sử Check-in Gần Nhất
+                    </h5>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">Real-time</span>
+                </div>
+                <div class="card-body p-0" style="max-height: 540px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush" id="recentList">
+                        @if (!Model.Any())
+                        {
+                            <li class="list-group-item text-center py-5 text-muted border-0" id="emptyHistory">
+                                <i class="fas fa-clipboard-check fa-3x mb-3 opacity-25 d-block"></i>
+                                Chưa có lượt check-in nào được ghi nhận.
+                            </li>
+                        }
+                        else
+                        {
+                            foreach (var g in Model)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@g.FullName</div>
+                                            <small class="text-muted">@(g.RoleTitle ?? "Khách mời") • @g.Event?.Title</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-light text-primary border fw-bold px-3 py-2">@g.InvitationCode</span>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrCode = null;
+        let isProcessing = false;
+
+        document.getElementById("manualCodeInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                submitCode();
+            }
+        });
+
+        function submitCode(scannedCode) {
+            const input = document.getElementById("manualCodeInput");
+            const code = scannedCode || input.value;
+            const eventId = document.getElementById("eventFilter").value;
+
+            if (!code.trim() || isProcessing) return;
+            isProcessing = true;
+
+            fetch('/Guests/VerifyCode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: code.trim(),
+                    eventId: eventId ? parseInt(eventId) : null
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const box = document.getElementById("scanResultBox");
+                    box.classList.remove("d-none", "alert-success", "alert-danger", "alert-warning");
+
+                    if (data.success) {
+                        box.classList.add("alert-success");
+                        box.innerHTML = `<div class="d-flex align-items-center gap-3">
+                                                <i class="fas fa-circle-check fa-2x text-success"></i>
+                                                <div>
+                                                    <h5 class="fw-bold mb-1">${data.message}</h5>
+                                                    <div class="small">Chức danh: <strong>${data.roleTitle}</strong> • Mã: <code>${data.code}</code></div>
+                                                </div>
+                                             </div>`;
+                        input.value = "";
+                        prependRecentList(data);
+                    } else if (data.alreadyChecked) {
+                        box.classList.add("alert-warning");
+                        box.innerHTML = `<div class="d-flex align-items-center gap-3">
+                                                <i class="fas fa-triangle-exclamation fa-2x text-warning"></i>
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Cảnh báo trùng lặp!</h6>
+                                                    <div class="small">${data.message}</div>
+                                                </div>
+                                             </div>`;
+                    } else {
+                        box.classList.add("alert-danger");
+                        box.innerHTML = `<div class="d-flex align-items-center gap-3">
+                                                <i class="fas fa-circle-xmark fa-2x text-danger"></i>
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Không hợp lệ</h6>
+                                                    <div class="small">${data.message}</div>
+                                                </div>
+                                             </div>`;
+                    }
+                })
+                .finally(() => {
+                    setTimeout(() => { isProcessing = false; }, 1200);
+                });
+        }
+
+        function prependRecentList(data) {
+            const empty = document.getElementById("emptyHistory");
+            if (empty) empty.remove();
+
+            const list = document.getElementById("recentList");
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center py-3 px-4 bg-success bg-opacity-10 history-item-enter";
+            li.innerHTML = `<div class="d-flex align-items-center gap-3">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">${data.guestName} <span class="badge bg-success ms-1">Vừa check-in</span></div>
+                                            <small class="text-muted">${data.roleTitle} • ${data.eventTitle}</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-white text-success border border-success fw-bold px-3 py-2">${data.code}</span>`;
+            list.prepend(li);
+        }
+
+        function startScanner() {
+            document.getElementById("cameraPlaceholder").classList.add("d-none");
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 230, height: 230 } },
+                (decodedText) => {
+                    document.getElementById("manualCodeInput").value = decodedText;
+                    submitCode(decodedText);
+                }
+            ).then(() => {
+                document.getElementById("btnStartCam").classList.add("d-none");
+                document.getElementById("btnStopCam").classList.remove("d-none");
+            }).catch(err => {
+                document.getElementById("cameraPlaceholder").classList.remove("d-none");
+                alert("Không thể mở Camera (vui lòng cấp quyền camera trên trình duyệt): " + err);
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById("btnStartCam").classList.remove("d-none");
+                    document.getElementById("btnStopCam").classList.add("d-none");
+                    document.getElementById("cameraPlaceholder").classList.remove("d-none");
+                });
+            }
+        }
+    </script>
+}
