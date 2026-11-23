@@ -104,6 +104,7 @@ namespace Quan_ly_su_kien.Controllers
             var eventItem = await _context.Events
                 .Include(e => e.Category)
                 .Include(e => e.Organizer)
+                .Include(e => e.TicketTypes)
                 .Include(e => e.Guests)
                 .Include(e => e.Feedbacks)
                     .ThenInclude(f => f.User)

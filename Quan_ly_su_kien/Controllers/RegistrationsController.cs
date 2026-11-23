@@ -13,11 +13,16 @@ namespace Quan_ly_su_kien.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public RegistrationsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public RegistrationsController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             _context = context;
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public async Task<IActionResult> MyTickets(string? status, string? search)
@@ -117,12 +122,13 @@ namespace Quan_ly_su_kien.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> Book(int eventId, int? ticketTypeId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
+            ApplicationUser? currentUser = null;
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return Challenge();
+                currentUser = await _userManager.GetUserAsync(User);
             }
 
             var eventItem = await _context.Events
@@ -166,9 +172,9 @@ namespace Quan_ly_su_kien.Controllers
                 OrganizerName = eventItem.Organizer?.FullName ?? eventItem.Organizer?.UserName ?? "Ban tổ chức",
                 TicketTypeId = selectedTicketId,
                 Quantity = 1,
-                FullName = currentUser.FullName ?? string.Empty,
-                Email = currentUser.Email ?? string.Empty,
-                PhoneNumber = currentUser.PhoneNumber,
+                FullName = currentUser?.FullName ?? string.Empty,
+                Email = currentUser?.Email ?? string.Empty,
+                PhoneNumber = currentUser?.PhoneNumber,
                 AvailableTickets = availableTickets
             };
 
@@ -176,13 +182,51 @@ namespace Quan_ly_su_kien.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(BookingViewModel model)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
+            ApplicationUser? currentUser = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                currentUser = await _userManager.GetUserAsync(User);
+            }
+
             if (currentUser == null)
             {
-                return Challenge();
+                if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.FullName))
+                {
+                    ModelState.AddModelError("Email", "Vui lòng nhập họ và tên cùng email để nhận vé điện tử.");
+                }
+                else
+                {
+                    var existingUser = await _userManager.FindByEmailAsync(model.Email.Trim());
+                    if (existingUser != null)
+                    {
+                        currentUser = existingUser;
+                    }
+                    else
+                    {
+                        var baseName = model.Email.Trim().Split('@')[0];
+                        var cleanName = char.ToUpper(baseName[0]) + (baseName.Length > 1 ? baseName[1..] : "");
+                        currentUser = new ApplicationUser
+                        {
+                            UserName = cleanName + new Random().Next(100, 999),
+                            Email = model.Email.Trim(),
+                            FullName = model.FullName.Trim(),
+                            PhoneNumber = model.PhoneNumber?.Trim(),
+                            EmailConfirmed = true,
+                            IsActive = true,
+                            CreatedAt = DateTime.Now
+                        };
+                        var createResult = await _userManager.CreateAsync(currentUser, "User@123");
+                        if (createResult.Succeeded)
+                        {
+                            await _userManager.AddToRoleAsync(currentUser, "Attendee");
+                        }
+                    }
+                    await _signInManager.SignInAsync(currentUser, isPersistent: true);
+                }
             }
 
             var eventItem = await _context.Events
@@ -222,7 +266,7 @@ namespace Quan_ly_su_kien.Controllers
                 ModelState.AddModelError("Quantity", "Số lượng vé đăng ký vượt quá tổng công suất tiếp nhận của sự kiện.");
             }
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || currentUser == null)
             {
                 model.EventTitle = eventItem.Title;
                 model.EventLocation = eventItem.Location;
