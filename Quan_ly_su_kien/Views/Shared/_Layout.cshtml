@@ -63,6 +63,11 @@
                                 <i class="fas fa-tags me-1 text-success"></i> Quản Lý Danh Mục
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Reports" asp-action="Index">
+                                <i class="fas fa-chart-bar me-1"></i> Báo Cáo & Thống Kê
+                            </a>
+                        </li>
                     }
                     else
                     {
@@ -146,6 +151,11 @@
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Events" asp-action="Create">
                                             <i class="fas fa-plus-circle me-2 text-success"></i> Tạo sự kiện mới
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Reports" asp-action="Index">
+                                            <i class="fas fa-chart-line me-2 text-info"></i> Báo cáo doanh thu
                                         </a>
                                     </li>
                                 }
