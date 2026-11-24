@@ -1,10 +1,10 @@
 @model Event
 @{
     ViewData["Title"] = Model.Title;
+    bool isOpen = Model.Status == "Open" && Model.EndDate > DateTime.Now;
 }
 
 <div class="container py-4">
-    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb small">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang Chủ</a></li>
@@ -14,7 +14,6 @@
     </nav>
 
     <div class="row g-4">
-        <!-- Cột Nội Dung Sự Kiện -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm overflow-hidden mb-4">
                 <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop&q=80" : Model.ImageUrl)" 
@@ -27,7 +26,7 @@
                         <span class="badge bg-primary px-3 py-2 rounded-pill">
                             <i class="fas fa-tag me-1"></i>@(Model.Category?.Name ?? "Chung")
                         </span>
-                        @if (Model.Status == "Open")
+                        @if (isOpen)
                         {
                             <span class="badge bg-success px-3 py-2 rounded-pill">
                                 <i class="fas fa-check-circle me-1"></i>Đang mở đăng ký vé
@@ -44,7 +43,6 @@
 
                     <h2 class="fw-bold text-dark mb-4">@Model.Title</h2>
 
-                    <!-- Thông tin cơ bản -->
                     <div class="row g-3 p-3 bg-light rounded-3 mb-4">
                         <div class="col-md-6 d-flex align-items-center">
                             <div class="bg-primary-subtle text-primary rounded-circle p-3 me-3">
@@ -73,7 +71,6 @@
                         @Model.Description
                     </div>
 
-                    <!-- Khách mời & Diễn giả (US-08) -->
                     @if (Model.Guests.Any())
                     {
                         <h4 class="fw-bold text-dark mb-3"><i class="fas fa-microphone-alt me-2 text-primary"></i>Diễn Giả & Khách Mời</h4>
@@ -98,9 +95,7 @@
             </div>
         </div>
 
-        <!-- Cột Đặt Vé & Thông Tin Ban Tổ Chức -->
         <div class="col-lg-4">
-            <!-- Thẻ Danh Sách Loại Vé -->
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-bold text-dark mb-3"><i class="fas fa-ticket-alt text-primary me-2"></i>Các Loại Vé Phát Hành</h5>
                 
@@ -113,7 +108,7 @@
                     <div class="d-flex flex-column gap-3 mb-3">
                         @foreach (var ticket in Model.TicketTypes)
                         {
-                            var remaining = ticket.Quantity - ticket.SoldQuantity;
+                            var remaining = ticket.QuantityAvailable;
                             <div class="card border p-3 bg-light">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="fw-bold text-dark">@ticket.TypeName</div>
@@ -123,33 +118,51 @@
                                     }
                                     else
                                     {
-                                        <span class="badge bg-primary rounded-pill px-2 py-1">@ticket.Price.ToString("N0") đ</span>
+                                        <span class="badge bg-primary rounded-pill px-2 py-1">@ticket.Price.ToString("N0") ₫</span>
                                     }
                                 </div>
-                                <div class="d-flex justify-content-between small text-muted">
-                                    <span>Còn lại: <strong>@remaining / @ticket.Quantity</strong> vé</span>
-                                    <span>Đã bán: @ticket.SoldQuantity</span>
+                                <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                                    <span>Còn lại: <strong>@remaining / @ticket.QuantityTotal</strong> vé</span>
+                                    <span>Đã bán: @(ticket.QuantityTotal - ticket.QuantityAvailable)</span>
                                 </div>
+                                @if (isOpen && remaining > 0)
+                                {
+                                    <a asp-controller="Registrations" asp-action="Book" asp-route-eventId="@Model.Id" asp-route-ticketTypeId="@ticket.Id" class="btn btn-sm btn-outline-primary rounded-pill w-100 fw-semibold">
+                                        <i class="fas fa-ticket-alt me-1"></i> Chọn Loại Vé Này
+                                    </a>
+                                }
+                                else if (remaining <= 0)
+                                {
+                                    <span class="badge bg-secondary rounded-pill py-2 w-100">Đã Hết Vé</span>
+                                }
                             </div>
                         }
                     </div>
 
-                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    @if (isOpen)
                     {
-                        <button type="button" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm" onclick="alert('Đã ghi nhận yêu cầu đặt vé thành công! Mã vé điện tử sẽ được cập nhật trong mục Vé Của Tôi.');">
-                            <i class="fas fa-shopping-cart me-2"></i>Đăng Ký Đặt Vé Ngay
-                        </button>
+                        if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <a asp-controller="Registrations" asp-action="Book" asp-route-eventId="@Model.Id" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm">
+                                <i class="fas fa-shopping-cart me-2"></i>Đăng Ký Đặt Vé Ngay
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Book", "Registrations", new { eventId = Model.Id })" class="btn btn-warning text-dark w-100 py-2 rounded-pill fw-semibold shadow-sm">
+                                <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Để Đặt Vé
+                            </a>
+                        }
                     }
                     else
                     {
-                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-warning text-dark w-100 py-2 rounded-pill fw-semibold shadow-sm">
-                            <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Để Đặt Vé
-                        </a>
+                        <div class="alert alert-secondary text-center py-2 mb-0 small rounded-pill">
+                            <i class="fas fa-lock me-1"></i> Sự kiện hiện không mở đăng ký vé
+                        </div>
                     }
                 }
             </div>
 
-            <!-- Thẻ Ban Tổ Chức -->
             <div class="card border-0 shadow-sm p-4">
                 <h5 class="fw-bold text-dark mb-3"><i class="fas fa-bullhorn text-warning me-2"></i>Đơn Vị Tổ Chức</h5>
                 <div class="d-flex align-items-center mb-3">
@@ -168,4 +181,3 @@
         </div>
     </div>
 </div>
-

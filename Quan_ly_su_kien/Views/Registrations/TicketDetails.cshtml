@@ -1,0 +1,260 @@
+@model Quan_ly_su_kien.Models.Registration
+@{
+    ViewData["Title"] = "Vé Điện Tử - " + (Model.Event?.Title ?? "Chi Tiết Vé");
+    var defaultImg = !string.IsNullOrWhiteSpace(Model.Event?.ImageUrl) 
+        ? Model.Event.ImageUrl 
+        : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&fit=crop";
+    var qrApiUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data={Uri.EscapeDataString(Model.QrCode)}";
+    bool canCancel = Model.Status == "Confirmed" && !Model.CheckInStatus && Model.Event != null && Model.Event.StartDate > DateTime.Now;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
+                <li class="breadcrumb-item"><a asp-action="MyTickets" class="text-decoration-none text-muted">Vé Của Tôi</a></li>
+                <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">Vé Điện Tử #@Model.Id</li>
+            </ol>
+        </nav>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> In Vé / Lưu PDF
+            </button>
+            <a asp-action="MyTickets" class="btn btn-primary rounded-pill px-3">
+                <i class="fas fa-list me-1"></i> Danh Sách Vé Của Tôi
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-4 shadow-sm mb-4 alert-dismissible fade show d-print-none" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle fs-4 me-3 text-success"></i>
+                <div>
+                    <strong>Thành công!</strong> @TempData["SuccessMessage"]
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden ticket-card mb-4">
+                <div class="bg-dark text-white p-4 position-relative overflow-hidden" 
+                     style="background: linear-gradient(135deg, #0d6efd 0%, #1e3a8a 100%);">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative z-1">
+                        <div class="d-flex align-items-center">
+                            <span class="bg-white text-primary rounded-circle p-2 me-3 d-inline-flex align-items-center justify-content-center shadow" style="width: 46px; height: 46px;">
+                                <i class="fas fa-ticket-alt fs-4"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-white">EventMana E-TICKET</h5>
+                                <small class="text-white-50">Thẻ vé tham dự điện tử chính thức</small>
+                            </div>
+                        </div>
+                        <div>
+                            @if (Model.Status == "Cancelled")
+                            {
+                                <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-ban me-1"></i> Vé Đã Hủy
+                                </span>
+                            }
+                            else if (Model.CheckInStatus)
+                            {
+                                <span class="badge bg-info text-dark fs-6 px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-check-double me-1"></i> Đã Check-in Cổng
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-check-circle me-1"></i> Vé Hợp Lệ
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-8 p-4 p-lg-5 border-end border-dashed">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                                    @(Model.Event?.Category?.Name ?? "Sự kiện")
+                                </span>
+                                <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
+                                    Hạng vé: @(Model.TicketType?.TypeName ?? "Vé tiêu chuẩn")
+                                </span>
+                            </div>
+
+                            <h3 class="fw-bold text-dark mb-4">@(Model.Event?.Title ?? "Tên sự kiện")</h3>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 h-100">
+                                        <div class="text-muted small fw-semibold mb-1"><i class="fas fa-calendar-alt text-primary me-2"></i>THỜI GIAN DIỄN RA</div>
+                                        <div class="fw-bold text-dark">@(Model.Event?.StartDate.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</div>
+                                        <small class="text-muted">Đến @(Model.Event?.EndDate.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</small>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-3 bg-light rounded-3 h-100">
+                                        <div class="text-muted small fw-semibold mb-1"><i class="fas fa-map-marker-alt text-danger me-2"></i>ĐỊA ĐIỂM TỔ CHỨC</div>
+                                        <div class="fw-bold text-dark">@(Model.Event?.Location ?? "N/A")</div>
+                                        <small class="text-muted">Xuất trình vé tại quầy lễ tân</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-secondary text-uppercase small mb-3">Thông Tin Người Tham Dự & Thanh Toán</h6>
+                            <div class="table-responsive mb-0">
+                                <table class="table table-sm table-borderless small mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-muted ps-0" style="width: 140px;">Họ và tên:</td>
+                                            <td class="fw-bold text-dark">@(Model.User?.FullName ?? Model.User?.UserName ?? "Người dùng")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Email đăng ký:</td>
+                                            <td class="text-dark">@(Model.User?.Email ?? "N/A")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Số điện thoại:</td>
+                                            <td class="text-dark">@(string.IsNullOrEmpty(Model.User?.PhoneNumber) ? "Chưa cập nhật" : Model.User.PhoneNumber)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Đơn vị tổ chức:</td>
+                                            <td class="text-dark">@(Model.Event?.Organizer?.FullName ?? Model.Event?.Organizer?.UserName ?? "Ban tổ chức")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Số lượng vé:</td>
+                                            <td class="fw-bold text-dark">@Model.Quantity vé</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Tổng tiền thanh toán:</td>
+                                            <td class="fw-bold fs-6 @(Model.TotalPrice > 0 ? "text-primary" : "text-success")">
+                                                @(Model.TotalPrice > 0 ? Model.TotalPrice.ToString("N0") + " ₫" : "Miễn Phí")
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-0">Thời gian đặt vé:</td>
+                                            <td class="text-muted">@Model.RegisteredAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 p-4 p-lg-5 bg-light d-flex flex-column justify-content-between align-items-center text-center">
+                            <div class="w-100">
+                                <div class="small fw-bold text-secondary text-uppercase mb-2">Mã Check-in Sự Kiện</div>
+                                <div class="bg-white p-3 rounded-4 shadow-sm border mb-3 d-inline-block">
+                                    <img src="@qrApiUrl" alt="Mã QR vé" class="img-fluid" style="width: 190px; height: 190px;" />
+                                </div>
+                                <div class="mb-2">
+                                    <code class="fs-6 fw-bold text-primary bg-white px-3 py-1 rounded-pill border">@Model.QrCode</code>
+                                </div>
+                                <div class="small text-muted mb-3" style="font-size: 0.78rem;">
+                                    Quét mã QR tại cổng để nhân viên kiểm soát hoàn tất thủ tục check-in.
+                                </div>
+                            </div>
+
+                            <div class="w-100 pt-3 border-top d-print-none">
+                                @if (Model.CheckInStatus)
+                                {
+                                    <div class="alert alert-info py-2 px-2 mb-0 small rounded-3">
+                                        <i class="fas fa-check-double me-1"></i> Đã vào cổng lúc: <strong>@Model.CheckInTime?.ToString("HH:mm dd/MM/yyyy")</strong>
+                                    </div>
+                                }
+                                else if (canCancel)
+                                {
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-semibold" data-bs-toggle="modal" data-bs-target="#cancelTicketModal">
+                                        <i class="fas fa-times-circle me-1"></i> Hủy Đăng Ký Vé
+                                    </button>
+                                }
+                                else if (Model.Status == "Cancelled")
+                                {
+                                    <div class="text-danger small fw-semibold">
+                                        <i class="fas fa-info-circle me-1"></i> Vé đã hủy bỏ
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-muted small">
+                                        <i class="fas fa-lock me-1"></i> Không thể hủy do sự kiện đã diễn ra
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-top p-3 text-center small text-muted">
+                    Vui lòng bảo mật mã vé điện tử này. Không chia sẻ mã QR với người khác trước khi sự kiện diễn ra.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canCancel)
+{
+    <div class="modal fade" id="cancelTicketModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger" id="cancelModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Xác Nhận Hủy Đăng Ký Vé
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="text-secondary mb-2">Bạn có chắc chắn muốn hủy đăng ký vé cho sự kiện này không?</p>
+                    <div class="p-3 bg-light rounded-3 small">
+                        <div><strong>Sự kiện:</strong> @Model.Event?.Title</div>
+                        <div><strong>Mã vé:</strong> @Model.QrCode</div>
+                        <div><strong>Số lượng hoàn lại:</strong> @Model.Quantity vé</div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">Sau khi hủy, số lượng vé sẽ được hoàn trả lại cho hệ thống để người khác có thể đăng ký.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Đóng</button>
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                            <i class="fas fa-trash-alt me-1"></i> Xác Nhận Hủy Vé
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    @@media print {
+        body {
+            background-color: #fff !important;
+        }
+        .navbar, footer, .d-print-none {
+            display: none !important;
+        }
+        .ticket-card {
+            box-shadow: none !important;
+            border: 1px solid #ccc !important;
+        }
+    }
+    .border-dashed {
+        border-right: 2px dashed #dee2e6 !important;
+    }
+    @@media (max-width: 767.98px) {
+        .border-dashed {
+            border-right: none !important;
+            border-bottom: 2px dashed #dee2e6 !important;
+        }
+    }
+</style>
+
