@@ -53,9 +53,9 @@ namespace Quan_ly_su_kien.Controllers
             ViewBag.FromDate = fromDate;
             ViewBag.ToDate = toDate;
 
-            // Bỏ .Include(e => e.TicketTypes) để tuyệt đối không chạm vào bảng TicketTypes đang lệch cột
             var query = _context.Events
                 .Include(e => e.Category)
+                .Include(e => e.TicketTypes)
                 .Where(e => e.Status != "Draft")
                 .AsQueryable();
 
@@ -104,6 +104,7 @@ namespace Quan_ly_su_kien.Controllers
             var eventItem = await _context.Events
                 .Include(e => e.Category)
                 .Include(e => e.Organizer)
+                .Include(e => e.TicketTypes)
                 .Include(e => e.Guests)
                 .Include(e => e.Feedbacks)
                     .ThenInclude(f => f.User)
@@ -126,6 +127,12 @@ namespace Quan_ly_su_kien.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
+            var exceptionFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+            if (exceptionFeature?.Error != null)
+            {
+                ViewBag.ErrorMessage = exceptionFeature.Error.Message;
+                ViewBag.ErrorPath = exceptionFeature.Path;
+            }
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }

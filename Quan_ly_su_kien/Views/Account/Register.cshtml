@@ -19,7 +19,6 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2" role="alert"></div>
 
-                    <!-- Họ và tên -->
                     <div class="mb-3">
                         <label asp-for="FullName" class="form-label fw-semibold text-secondary small"></label>
                         <div class="input-group">
@@ -30,7 +29,6 @@
                     </div>
 
                     <div class="row g-2 mb-3">
-                        <!-- Tên đăng nhập -->
                         <div class="col-md-6">
                             <label asp-for="UserName" class="form-label fw-semibold text-secondary small"></label>
                             <div class="input-group">
@@ -40,7 +38,6 @@
                             <span asp-validation-for="UserName" class="text-danger small"></span>
                             <div class="text-muted" style="font-size: 0.72rem;"><i class="fas fa-info-circle me-1"></i>Chữ cái đầu phải viết hoa (A-Z)</div>
                         </div>
-                        <!-- Số điện thoại -->
                         <div class="col-md-6">
                             <label asp-for="PhoneNumber" class="form-label fw-semibold text-secondary small"></label>
                             <div class="input-group">
@@ -51,7 +48,6 @@
                         </div>
                     </div>
 
-                    <!-- Email -->
                     <div class="mb-3">
                         <label asp-for="Email" class="form-label fw-semibold text-secondary small"></label>
                         <div class="input-group">
@@ -61,7 +57,6 @@
                         <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
-                    <!-- Chọn vai trò tham gia -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Bạn muốn tham gia với vai trò nào?</label>
                         <div class="row g-2">
@@ -86,7 +81,6 @@
                     </div>
 
                     <div class="row g-2 mb-4">
-                        <!-- Mật khẩu -->
                         <div class="col-md-6">
                             <label asp-for="Password" class="form-label fw-semibold text-secondary small"></label>
                             <div class="input-group">
@@ -95,7 +89,6 @@
                             </div>
                             <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
-                        <!-- Nhập lại mật khẩu -->
                         <div class="col-md-6">
                             <label asp-for="ConfirmPassword" class="form-label fw-semibold text-secondary small"></label>
                             <div class="input-group">
@@ -125,4 +118,3 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-

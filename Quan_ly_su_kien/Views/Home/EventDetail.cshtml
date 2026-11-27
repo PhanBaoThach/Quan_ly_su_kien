@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = Model.Title;
     bool isOpen = Model.Status == "Open" && Model.EndDate > DateTime.Now;
+    var availableTickets = Model.TicketTypes.Where(t => t.IsActive && (t.QuantityAvailable > 0 || (t.QuantityTotal - t.SoldQuantity) > 0)).ToList();
 }
 
 <div class="container py-4">
@@ -12,6 +13,14 @@
             <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
         </ol>
     </nav>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger rounded-4 shadow-sm mb-4 alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div class="row g-4">
         <div class="col-lg-8">
@@ -108,7 +117,8 @@
                     <div class="d-flex flex-column gap-3 mb-3">
                         @foreach (var ticket in Model.TicketTypes)
                         {
-                            var remaining = ticket.QuantityAvailable;
+                            var remaining = ticket.QuantityAvailable > 0 ? ticket.QuantityAvailable : Math.Max(0, ticket.QuantityTotal - ticket.SoldQuantity);
+                            var soldCount = ticket.QuantityTotal > remaining ? (ticket.QuantityTotal - remaining) : ticket.SoldQuantity;
                             <div class="card border p-3 bg-light">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="fw-bold text-dark">@ticket.TypeName</div>
@@ -123,13 +133,13 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
                                     <span>Còn lại: <strong>@remaining / @ticket.QuantityTotal</strong> vé</span>
-                                    <span>Đã bán: @(ticket.QuantityTotal - ticket.QuantityAvailable)</span>
+                                    <span>Đã bán: @soldCount</span>
                                 </div>
                                 @if (isOpen && remaining > 0)
                                 {
-                                    <a asp-controller="Registrations" asp-action="Book" asp-route-eventId="@Model.Id" asp-route-ticketTypeId="@ticket.Id" class="btn btn-sm btn-outline-primary rounded-pill w-100 fw-semibold">
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill w-100 fw-semibold" onclick="openBookingModal(@ticket.Id, @ticket.Price, '@ticket.TypeName', @remaining)">
                                         <i class="fas fa-ticket-alt me-1"></i> Chọn Loại Vé Này
-                                    </a>
+                                    </button>
                                 }
                                 else if (remaining <= 0)
                                 {
@@ -139,22 +149,14 @@
                         }
                     </div>
 
-                    @if (isOpen)
+                    @if (isOpen && availableTickets.Any())
                     {
-                        if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <a asp-controller="Registrations" asp-action="Book" asp-route-eventId="@Model.Id" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm">
-                                <i class="fas fa-shopping-cart me-2"></i>Đăng Ký Đặt Vé Ngay
-                            </a>
-                        }
-                        else
-                        {
-                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Book", "Registrations", new { eventId = Model.Id })" class="btn btn-warning text-dark w-100 py-2 rounded-pill fw-semibold shadow-sm">
-                                <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Để Đặt Vé
-                            </a>
-                        }
+                        var firstTicket = availableTickets.First();
+                        <button type="button" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold shadow-sm" onclick="openBookingModal(@firstTicket.Id, @firstTicket.Price, '@firstTicket.TypeName', @firstTicket.QuantityAvailable)">
+                            <i class="fas fa-shopping-cart me-2"></i>Đăng Ký Đặt Vé Ngay
+                        </button>
                     }
-                    else
+                    else if (!isOpen)
                     {
                         <div class="alert alert-secondary text-center py-2 mb-0 small rounded-pill">
                             <i class="fas fa-lock me-1"></i> Sự kiện hiện không mở đăng ký vé
@@ -181,3 +183,181 @@
         </div>
     </div>
 </div>
+
+@if (isOpen && availableTickets.Any())
+{
+    <div class="modal fade" id="modalBooking" tabindex="-1" aria-labelledby="modalBookingLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <div>
+                        <h4 class="modal-title fw-bold text-dark" id="modalBookingLabel">
+                            <i class="fas fa-ticket-alt text-primary me-2"></i>Đăng Ký Vé Tham Gia Sự Kiện
+                        </h4>
+                        <p class="text-muted small mb-0">Điền thông tin người tham gia để hệ thống tạo vé điện tử và mã QR Code.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form asp-controller="Registrations" asp-action="Book" method="post" id="formQuickBook">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="EventId" value="@Model.Id" />
+
+                    <div class="modal-body p-4">
+                        <div class="p-3 bg-light rounded-4 mb-4">
+                            <div class="small text-muted mb-1 text-uppercase fw-semibold">Sự kiện đăng ký:</div>
+                            <h5 class="fw-bold text-dark mb-1">@Model.Title</h5>
+                            <div class="small text-muted">
+                                <i class="fas fa-calendar-alt text-primary me-1"></i> @Model.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i> @Model.Location
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold text-secondary small">Chọn hạng vé tham gia <span class="text-danger">*</span></label>
+                                <select name="TicketTypeId" id="selectTicketType" class="form-select rounded-3 py-2" onchange="onTicketChange()">
+                                    @foreach (var t in availableTickets)
+                                    {
+                                        var rem = t.QuantityAvailable > 0 ? t.QuantityAvailable : Math.Max(0, t.QuantityTotal - t.SoldQuantity);
+                                        <option value="@t.Id" data-price="@t.Price" data-available="@rem" data-name="@t.TypeName">
+                                            @t.TypeName - @(t.Price == 0 ? "Miễn Phí" : t.Price.ToString("N0") + " ₫") (Còn @rem vé)
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold text-secondary small">Số lượng vé đặt <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(-1)"><i class="fas fa-minus"></i></button>
+                                    <input type="number" name="Quantity" id="inputModalQty" class="form-control text-center fw-bold fs-5" value="1" min="1" max="10" oninput="calculateModalTotal()" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(1)"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-user-edit text-primary me-2"></i>Thông Tin Người Tham Gia Nhận Vé</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Họ và tên người nhận vé <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="fas fa-user"></i></span>
+                                <input type="text" name="FullName" id="inputFullName" class="form-control" required placeholder="Ví dụ: Nguyễn Văn A" value="@(User.Identity?.Name ?? "")" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Email nhận vé điện tử <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white text-muted"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" name="Email" id="inputEmail" class="form-control" required placeholder="email@example.com" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Số điện thoại liên hệ</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white text-muted"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" name="PhoneNumber" id="inputPhone" class="form-control" placeholder="0987654321" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Ghi chú (nếu có)</label>
+                            <textarea name="Notes" rows="2" class="form-control" placeholder="Yêu cầu chỗ ngồi hoặc lưu ý thêm cho ban tổ chức..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-4 border">
+                            <div>
+                                <div class="small text-muted">Đơn giá: <strong id="lblUnitPrice" class="text-dark">0 ₫</strong></div>
+                                <div class="small text-muted">Số lượng: <strong id="lblQuantity" class="text-dark">1 vé</strong></div>
+                            </div>
+                            <div class="text-end">
+                                <span class="small text-muted d-block">Tổng tiền thanh toán:</span>
+                                <span id="lblTotalPrice" class="fs-4 fw-bold text-primary">0 ₫</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                            <i class="fas fa-check-circle me-1"></i> Xác Nhận Đăng Ký Vé
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            let bookingModalInstance = null;
+
+            function openBookingModal(ticketId, price, name, available) {
+                const select = document.getElementById('selectTicketType');
+                if (select) {
+                    select.value = ticketId;
+                }
+                const modalEl = document.getElementById('modalBooking');
+                if (modalEl) {
+                    if (!bookingModalInstance) {
+                        bookingModalInstance = new bootstrap.Modal(modalEl);
+                    }
+                    calculateModalTotal();
+                    bookingModalInstance.show();
+                }
+            }
+
+            function onTicketChange() {
+                calculateModalTotal();
+            }
+
+            function adjustQty(delta) {
+                const qtyInput = document.getElementById('inputModalQty');
+                if (!qtyInput) return;
+                let val = parseInt(qtyInput.value) || 1;
+                val += delta;
+                if (val < 1) val = 1;
+                if (val > 10) val = 10;
+                qtyInput.value = val;
+                calculateModalTotal();
+            }
+
+            function calculateModalTotal() {
+                const select = document.getElementById('selectTicketType');
+                const qtyInput = document.getElementById('inputModalQty');
+                const lblUnitPrice = document.getElementById('lblUnitPrice');
+                const lblQuantity = document.getElementById('lblQuantity');
+                const lblTotalPrice = document.getElementById('lblTotalPrice');
+
+                if (!select || !qtyInput) return;
+
+                const selectedOption = select.options[select.selectedIndex];
+                if (!selectedOption) return;
+
+                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                const available = parseInt(selectedOption.getAttribute('data-available')) || 10;
+                let qty = parseInt(qtyInput.value) || 1;
+
+                if (qty < 1) qty = 1;
+                if (qty > 10) qty = 10;
+                if (qty > available) qty = available;
+                qtyInput.value = qty;
+
+                if (lblQuantity) lblQuantity.textContent = qty + ' vé';
+
+                if (price === 0) {
+                    if (lblUnitPrice) lblUnitPrice.textContent = 'Miễn Phí';
+                    if (lblTotalPrice) lblTotalPrice.textContent = 'Miễn Phí';
+                } else {
+                    if (lblUnitPrice) lblUnitPrice.textContent = price.toLocaleString('vi-VN') + ' ₫';
+                    const total = price * qty;
+                    if (lblTotalPrice) lblTotalPrice.textContent = total.toLocaleString('vi-VN') + ' ₫';
+                }
+            }
+        </script>
+    }
+}

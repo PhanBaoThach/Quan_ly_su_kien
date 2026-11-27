@@ -9,7 +9,6 @@ using Quan_ly_su_kien.ViewModels;
 namespace Quan_ly_su_kien.Controllers
 {
     [Authorize(Roles = "Admin")]
-    [Route("Admin")]
     [Route("Admin/[action]")]
     public class AdminController : Controller
     {
@@ -32,8 +31,8 @@ namespace Quan_ly_su_kien.Controllers
 
         // GET: /Admin hoặc /Admin/Index
         [HttpGet]
-        [Route("")]
-        [Route("Index")]
+        [Route("~/Admin")]
+        [Route("~/Admin/Index")]
         public async Task<IActionResult> Index()
         {
             var totalUsers = await _userManager.Users.CountAsync();

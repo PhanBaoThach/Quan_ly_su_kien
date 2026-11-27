@@ -121,8 +121,12 @@ CREATE TABLE TicketTypes (
     EventId INT NOT NULL,
     TypeName NVARCHAR(100) NOT NULL, -- Miễn phí, Thường, VIP
     Price DECIMAL(18,2) NOT NULL DEFAULT 0,
-    Quantity INT NOT NULL,
-    SoldQuantity INT NOT NULL DEFAULT 0,
+    Quantity INT NULL DEFAULT 0,
+    SoldQuantity INT NULL DEFAULT 0,
+    QuantityTotal INT NOT NULL DEFAULT 100,
+    QuantityAvailable INT NOT NULL DEFAULT 100,
+    Description NVARCHAR(500) NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
     SaleStart DATETIME2 NOT NULL,
     SaleEnd DATETIME2 NOT NULL,
     CONSTRAINT FK_TicketTypes_Events FOREIGN KEY (EventId) REFERENCES Events(Id) ON DELETE CASCADE
@@ -237,10 +241,10 @@ INSERT INTO Events (Title, Description, Location, StartDate, EndDate, ImageUrl, 
 (N'Giải Chạy Marathon Sinh Viên 2026', N'Lan tỏa lối sống xanh, rèn luyện sức khỏe và gây quỹ học bổng cho sinh viên khó khăn.', N'Khuôn viên Đại học Vinh', '2026-12-05 06:00:00', '2026-12-05 11:00:00', 'https://picsum.photos/600/300?random=3', 500, 'Draft', 3, 'user-org-1');
 
 -- 6. Thêm TicketTypes (Loại vé)
-INSERT INTO TicketTypes (EventId, TypeName, Price, Quantity, SoldQuantity, SaleStart, SaleEnd) VALUES 
-(1, N'Vé Miễn Phí (Sinh viên)', 0.00, 200, 45, '2026-10-01 00:00:00', '2026-11-14 23:59:00'),
-(1, N'Vé VIP (Kèm tài liệu & quà)', 250000.00, 100, 20, '2026-10-01 00:00:00', '2026-11-14 23:59:00'),
-(2, N'Vé Thường Fanzone', 100000.00, 800, 150, '2026-10-05 00:00:00', '2026-11-19 23:59:00');
+INSERT INTO TicketTypes (EventId, TypeName, Price, Quantity, SoldQuantity, QuantityTotal, QuantityAvailable, Description, IsActive, SaleStart, SaleEnd) VALUES 
+(1, N'Vé Miễn Phí (Sinh viên)', 0.00, 200, 45, 200, 155, N'Dành cho sinh viên tham dự', 1, '2026-10-01 00:00:00', '2026-11-14 23:59:00'),
+(1, N'Vé VIP (Kèm tài liệu & quà)', 250000.00, 100, 20, 100, 80, N'Bao gồm quà tặng và teabreak VIP', 1, '2026-10-01 00:00:00', '2026-11-14 23:59:00'),
+(2, N'Vé Thường Fanzone', 100000.00, 800, 150, 800, 650, N'Khu vực fanzone gần sân khấu', 1, '2026-10-05 00:00:00', '2026-11-19 23:59:00');
 
 -- 7. Thêm Registrations (Đăng ký vé mẫu)
 INSERT INTO Registrations (EventId, UserId, TicketTypeId, Quantity, TotalPrice, Status, CheckInStatus, CheckInTime, QrCode) VALUES 

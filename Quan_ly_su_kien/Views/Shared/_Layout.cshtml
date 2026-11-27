@@ -20,7 +20,7 @@
     <title>@ViewData["Title"] - EventMana</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -47,52 +47,84 @@
 
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                    <li class="nav-item">
+                        <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-home me-1"></i> Trang Chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Events">
+                            <i class="fas fa-calendar-check me-1"></i> Khám Phá Sự Kiện
+                        </a>
+                    </li>
+
+                    @if (SignInManager.IsSignedIn(User))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-warning fw-semibold px-3" asp-controller="Admin" asp-action="Index">
-                                <i class="fas fa-shield-alt me-1 text-warning"></i> Dashboard Quản Trị
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Admin" asp-action="Users">
-                                <i class="fas fa-users-cog me-1 text-info"></i> Quản Lý Tài Khoản
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Admin" asp-action="Categories">
-                                <i class="fas fa-tags me-1 text-success"></i> Quản Lý Danh Mục
+                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Registrations" asp-action="MyTickets">
+                                <i class="fas fa-ticket-alt me-1 text-info"></i> Vé Của Tôi
                             </a>
                         </li>
                     }
-                    else
+
+                    @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Organizer") || User.IsInRole("Admin")))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Index">
-                                <i class="fas fa-home me-1"></i> Trang Chủ
+                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Events" asp-action="MyEvents">
+                                <i class="fas fa-calendar-alt me-1"></i> Quản Lý Sự Kiện
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Events">
-                                <i class="fas fa-calendar-check me-1"></i> Khám Phá Sự Kiện
+                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Guests" asp-action="Index">
+                                <i class="fas fa-user-tie me-1 text-info"></i> Quản Lý Khách Mời
                             </a>
                         </li>
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Registrations" asp-action="MyTickets">
-                                    <i class="fas fa-ticket-alt me-1 text-info"></i> Vé Của Tôi
-                                </a>
-                            </li>
-                        }
-                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Organizer"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Events" asp-action="MyEvents">
-                                    <i class="fas fa-calendar-alt me-1"></i> Quản Lý Sự Kiện
-                                </a>
-                            </li>
-                        }
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Reports" asp-action="Index">
+                                <i class="fas fa-chart-bar me-1"></i> Báo Cáo & Thống Kê
+                            </a>
+                        </li>
+                    }
+
+                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning fw-semibold px-3" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-shield-alt me-1"></i> Quản Trị Hệ Thống
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow border-0">
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Index">
+                                        <i class="fas fa-tachometer-alt me-2 text-info"></i> Bảng điều khiển (Dashboard)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Events" asp-action="MyEvents">
+                                        <i class="fas fa-calendar-alt me-2 text-primary"></i> Quản lý Sự kiện
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Guests" asp-action="Index">
+                                        <i class="fas fa-user-tie me-2 text-primary"></i> Quản lý Khách mời
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Guests" asp-action="CheckIn">
+                                        <i class="fas fa-qrcode me-2 text-success"></i> Cổng Check-in QR
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Users">
+                                        <i class="fas fa-users-cog me-2 text-warning"></i> Quản lý Tài khoản
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Categories">
+                                        <i class="fas fa-tags me-2 text-success"></i> Quản lý Danh mục
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     }
                 </ul>
 
@@ -137,7 +169,7 @@
                                         <i class="fas fa-ticket-alt me-2 text-info"></i> Vé của tôi
                                     </a>
                                 </li>
-                                @if (User.IsInRole("Organizer"))
+                                @if (User.IsInRole("Organizer") || User.IsInRole("Admin"))
                                 {
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Events" asp-action="MyEvents">
@@ -149,22 +181,32 @@
                                             <i class="fas fa-plus-circle me-2 text-success"></i> Tạo sự kiện mới
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Guests" asp-action="Index">
+                                            <i class="fas fa-user-tie me-2 text-info"></i> Quản lý khách mời
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Guests" asp-action="CheckIn">
+                                            <i class="fas fa-qrcode me-2 text-success"></i> Cổng Check-in QR
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Reports" asp-action="Index">
+                                            <i class="fas fa-chart-line me-2 text-info"></i> Báo cáo doanh thu
+                                        </a>
+                                    </li>
                                 }
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Index">
-                                            <i class="fas fa-tachometer-alt me-2 text-info"></i> Dashboard Quản trị
+                                            <i class="fas fa-cog me-2 text-secondary"></i> Bảng quản trị
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Users">
-                                            <i class="fas fa-users-cog me-2 text-warning"></i> Quản lý tài khoản
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Categories">
-                                            <i class="fas fa-tags me-2 text-success"></i> Quản lý danh mục
+                                            <i class="fas fa-users me-2 text-secondary"></i> Quản lý tài khoản
                                         </a>
                                     </li>
                                 }
