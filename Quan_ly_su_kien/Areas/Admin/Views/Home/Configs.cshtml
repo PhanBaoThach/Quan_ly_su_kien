@@ -1,0 +1,276 @@
+@using Quan_ly_su_kien.Models
+@model IEnumerable<SystemConfig>
+@{
+    ViewData["Title"] = "Quản Lý Cấu Hình Hệ Thống";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var maintenanceConfig = Model.FirstOrDefault(c => c.ConfigKey == "MaintenanceMode");
+    var isMaintenance = maintenanceConfig != null && maintenanceConfig.ConfigValue.Equals("True", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container py-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="/Admin" class="text-decoration-none">Quản trị</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Cấu Hình Hệ Thống</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="fas fa-sliders-h text-primary me-2"></i>Quản Lý Cấu Hình Hệ Thống
+            </h2>
+            <p class="text-muted small mb-0">Thiết lập tham số vận hành, thông số giới hạn và quy định chung của toàn bộ nền tảng EventMana</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createConfigModal">
+                <i class="fas fa-plus me-1"></i> Thêm Cấu Hình Mới
+            </button>
+            <button type="submit" form="configsBatchForm" class="btn btn-primary rounded-pill px-4 shadow-sm fw-semibold">
+                <i class="fas fa-save me-1"></i> Lưu Tất Cả Thay Đổi
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">TỔNG SỐ THAM SỐ</div>
+                        <div class="fs-3 fw-bold text-dark mt-1">@Model.Count()</div>
+                        <small class="text-muted">Tham số cấu hình đang kích hoạt</small>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                        <i class="fas fa-cogs fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">TRẠNG THÁI HỆ THỐNG</div>
+                        <div class="fs-4 fw-bold mt-1 @(isMaintenance ? "text-danger" : "text-success")">
+                            @(isMaintenance ? "BẢO TRÌ" : "HOẠT ĐỘNG TỐT")
+                        </div>
+                        <small class="text-muted">Chế độ người dùng truy cập</small>
+                    </div>
+                    <div class="@(isMaintenance ? "bg-danger bg-opacity-10 text-danger" : "bg-success bg-opacity-10 text-success") rounded-circle p-3">
+                        <i class="fas @(isMaintenance ? "fa-tools" : "fa-shield-check") fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">NHẮC LỊCH TRƯỚC</div>
+                        <div class="fs-3 fw-bold text-info mt-1">
+                            @(Model.FirstOrDefault(c => c.ConfigKey == "NotificationReminderDays")?.ConfigValue ?? "3") Ngày
+                        </div>
+                        <small class="text-muted">Thời hạn gửi thông báo nhắc nhở</small>
+                    </div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-3">
+                        <i class="fas fa-business-time fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fas fa-list-alt text-primary me-2"></i>Danh Sách Tham Số Cấu Hình
+            </h5>
+            <span class="badge bg-light text-muted border px-2 py-1">Thay đổi trực tiếp giá trị và bấm "Lưu Tất Cả"</span>
+        </div>
+        <form id="configsBatchForm" asp-action="SaveConfigs" method="post">
+            @Html.AntiForgeryToken()
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 5%;">#</th>
+                            <th style="width: 25%;">Khóa cấu hình (Key)</th>
+                            <th style="width: 35%;">Giá trị cấu hình (Value)</th>
+                            <th style="width: 25%;">Mô tả chi tiết</th>
+                            <th class="text-end pe-4" style="width: 10%;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="fas fa-sliders-h fs-3 d-block mb-2"></i>
+                                    Chưa có cấu hình nào. Hãy thêm cấu hình đầu tiên!
+                                </td>
+                            </tr>
+                        }
+                        @{ int idx = 1; }
+                        @foreach (var conf in Model)
+                        {
+                            var isBool = conf.ConfigValue.Equals("True", StringComparison.OrdinalIgnoreCase) || conf.ConfigValue.Equals("False", StringComparison.OrdinalIgnoreCase);
+                            <tr>
+                                <td class="ps-4 text-muted fw-bold">@(idx++)</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-2 py-1 fs-6 font-monospace">
+                                        @conf.ConfigKey
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (isBool)
+                                    {
+                                        <select name="configs[@conf.ConfigKey]" class="form-select form-select-sm rounded-pill fw-semibold @(conf.ConfigValue == "True" ? "border-success text-success" : "border-secondary text-secondary")" style="max-width: 180px;">
+                                            @if (conf.ConfigValue == "True")
+                                            {
+                                                <option value="True" selected>Bật (True)</option>
+                                                <option value="False">Tắt (False)</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="True">Bật (True)</option>
+                                                <option value="False" selected>Tắt (False)</option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" name="configs[@conf.ConfigKey]" value="@conf.ConfigValue" class="form-control form-control-sm rounded-3" />
+                                    }
+                                </td>
+                                <td>
+                                    <span class="text-muted small">@(conf.Description ?? "Không có mô tả")</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-2 me-1" data-bs-toggle="modal" data-bs-target="#editModal-@conf.Id" title="Chỉnh sửa chi tiết">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#deleteModal-@conf.Id" title="Xóa cấu hình">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="createConfigModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>Thêm Cấu Hình Mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateConfig" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Khóa cấu hình (Key) *</label>
+                        <input type="text" name="ConfigKey" class="form-control rounded-3" placeholder="Ví dụ: MaxUploadSizeMB, BannerText..." required />
+                        <small class="text-muted">Tên định danh duy nhất (viết liền hoặc PascalCase).</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Giá trị cấu hình (Value) *</label>
+                        <textarea name="ConfigValue" rows="2" class="form-control rounded-3" placeholder="Nhập giá trị thiết lập..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">Mô tả mục đích</label>
+                        <input type="text" name="Description" class="form-control rounded-3" placeholder="Giải thích ngắn gọn ý nghĩa của cấu hình..." />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">Tạo mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@foreach (var conf in Model)
+{
+    <div class="modal fade" id="editModal-@conf.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-edit text-primary me-2"></i>Chỉnh Sửa: @conf.ConfigKey
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="EditConfig" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@conf.Id" />
+                    <div class="modal-body py-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted">Khóa cấu hình (Key)</label>
+                            <input type="text" value="@conf.ConfigKey" class="form-control rounded-3 bg-light" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted">Giá trị cấu hình (Value) *</label>
+                            <textarea name="ConfigValue" rows="3" class="form-control rounded-3" required>@conf.ConfigValue</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-muted">Mô tả mục đích</label>
+                            <input type="text" name="Description" value="@conf.Description" class="form-control rounded-3" />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteModal-@conf.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 shadow text-center p-3">
+                <div class="modal-body">
+                    <div class="text-danger mb-3">
+                        <i class="fas fa-exclamation-triangle fs-1"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark">Xác nhận xóa cấu hình?</h6>
+                    <p class="text-muted small mb-0">Bạn có chắc muốn xóa tham số <strong>@conf.ConfigKey</strong> khỏi hệ thống?</p>
+                </div>
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                    <form asp-action="DeleteConfig" asp-route-id="@conf.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger rounded-pill px-3">Xác nhận xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

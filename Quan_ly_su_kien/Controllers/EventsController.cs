@@ -9,7 +9,7 @@ using Quan_ly_su_kien.ViewModels;
 
 namespace Quan_ly_su_kien.Controllers
 {
-    [Authorize(Roles = "Organizer,Admin")]
+    [Authorize(Roles = "Organizer")]
     public class EventsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -42,10 +42,7 @@ namespace Quan_ly_su_kien.Controllers
                 .Include(e => e.Registrations)
                 .AsQueryable();
 
-            if (!User.IsInRole("Admin"))
-            {
-                query = query.Where(e => e.OrganizerId == user.Id);
-            }
+            query = query.Where(e => e.OrganizerId == user.Id);
 
             var allMyEvents = await query.ToListAsync();
             ViewBag.TotalEvents = allMyEvents.Count;
@@ -164,7 +161,7 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
+            if (eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
             }
@@ -207,7 +204,7 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
+            if (eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
             }
@@ -268,7 +265,7 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
+            if (eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
             }
@@ -290,7 +287,7 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
+            if (eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
             }
@@ -335,7 +332,7 @@ namespace Quan_ly_su_kien.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            if (!User.IsInRole("Admin") && eventItem.OrganizerId != user.Id)
+            if (eventItem.OrganizerId != user.Id)
             {
                 return RedirectToAction("AccessDenied", "Account");
             }

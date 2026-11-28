@@ -1,0 +1,220 @@
+@model IEnumerable<Quan_ly_su_kien.Models.Notification>
+@{
+    ViewData["Title"] = "Thông Báo & Nhắc Lịch";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "all";
+}
+
+<div class="container py-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small text-muted mb-1">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Trang Chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Thông Báo & Nhắc Lịch</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="fas fa-bell text-warning me-2"></i>Thông Báo &amp; Nhắc Lịch Sự Kiện
+            </h2>
+            <p class="text-muted small mb-0">Theo dõi thông tin cập nhật, tình trạng vé và lịch trình sự kiện quan trọng</p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <form asp-action="MarkAllAsRead" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-primary rounded-pill px-3 py-2 btn-sm fw-semibold">
+                    <i class="fas fa-check-double me-1"></i> Đọc tất cả
+                </button>
+            </form>
+            <form asp-action="DeleteAllRead" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả thông báo đã đọc?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger rounded-pill px-3 py-2 btn-sm fw-semibold">
+                    <i class="fas fa-trash-alt me-1"></i> Dọn dẹp đã đọc
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">TỔNG THÔNG BÁO</div>
+                        <div class="fs-3 fw-bold text-dark mt-1">@ViewBag.TotalCount</div>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                        <i class="fas fa-envelope-open-text fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">CHƯA ĐỌC</div>
+                        <div class="fs-3 fw-bold text-warning mt-1">@ViewBag.UnreadCount</div>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3">
+                        <i class="fas fa-bell fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">NHẮC LỊCH SỰ KIỆN</div>
+                        <div class="fs-3 fw-bold text-info mt-1">@ViewBag.ReminderCount</div>
+                    </div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-3">
+                        <i class="fas fa-calendar-check fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-2 mb-4 bg-white">
+        <ul class="nav nav-pills gap-1">
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-2 fw-medium @(currentFilter == "all" ? "active" : "text-muted")"
+                   asp-action="Index" asp-route-filter="all">
+                    Tất Cả (@ViewBag.TotalCount)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-2 fw-medium @(currentFilter == "unread" ? "active" : "text-muted")"
+                   asp-action="Index" asp-route-filter="unread">
+                    Chưa Đọc (@ViewBag.UnreadCount)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-2 fw-medium @(currentFilter == "reminder" ? "active" : "text-muted")"
+                   asp-action="Index" asp-route-filter="reminder">
+                    Nhắc Lịch Sự Kiện (@ViewBag.ReminderCount)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill px-3 py-2 fw-medium @(currentFilter == "read" ? "active" : "text-muted")"
+                   asp-action="Index" asp-route-filter="read">
+                    Đã Đọc
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+            <div class="py-4">
+                <div class="text-muted mb-3">
+                    <i class="fas fa-bell-slash fs-1 text-secondary opacity-50"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Không có thông báo nào</h5>
+                <p class="text-muted small mb-0">Hộp thư thông báo của bạn hiện tại đang trống hoặc không có thông báo nào thuộc bộ lọc này.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var item in Model)
+            {
+                var isReminder = item.Title.Contains("Nhắc Lịch") || item.Title.Contains("Nhắc Tổ Chức") || item.Title.Contains("Nhắc Nhở");
+                var isSystem = item.Title.Contains("Hệ Thống") || item.Title.Contains("Sự Kiện Mới");
+                var badgeClass = isReminder ? "bg-info text-info" : (isSystem ? "bg-primary text-primary" : "bg-warning text-warning");
+                var iconClass = isReminder ? "fa-calendar-alt text-info" : (isSystem ? "fa-server text-primary" : "fa-bell text-warning");
+
+                <div class="card border-0 shadow-sm rounded-4 p-3 transition-card @(!item.IsRead ? "border-start border-4 border-warning bg-warning bg-opacity-10" : "bg-white")" id="notif-card-@item.Id">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle p-3 d-flex align-items-center justify-content-center flex-shrink-0 @badgeClass bg-opacity-10" style="width: 48px; height: 48px;">
+                            <i class="fas @iconClass fs-5"></i>
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                                <h6 class="fw-bold text-dark mb-0 @(!item.IsRead ? "text-primary" : "")">
+                                    @item.Title
+                                    @if (!item.IsRead)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-2 rounded-pill small" style="font-size: 0.7rem;">Mới</span>
+                                    }
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>@item.CreatedAt.ToString("HH:mm - dd/MM/yyyy")
+                                </small>
+                            </div>
+
+                            <p class="text-secondary mb-2" style="font-size: 0.95rem; line-height: 1.5;">
+                                @item.Message
+                            </p>
+
+                            <div class="d-flex align-items-center gap-2">
+                                @if (!item.IsRead)
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-primary text-decoration-none p-0 fw-semibold" onclick="markRead(@item.Id)">
+                                        <i class="fas fa-check me-1"></i> Đánh dấu đã đọc
+                                    </button>
+                                    <span class="text-muted">|</span>
+                                }
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có muốn xóa thông báo này?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0">
+                                        <i class="fas fa-trash-alt me-1"></i> Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function markRead(id) {
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            var token = tokenInput ? tokenInput.value : '';
+            fetch('/Notifications/MarkAsRead/' + id, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(res) {
+                if (res.success) {
+                    var card = document.getElementById('notif-card-' + id);
+                    if (card) {
+                        card.classList.remove('border-start', 'border-4', 'border-warning', 'bg-warning', 'bg-opacity-10');
+                        card.classList.add('bg-white');
+                        var badge = card.querySelector('.badge.bg-warning');
+                        if (badge) badge.remove();
+                        var btn = card.querySelector('button[onclick="markRead(' + id + ')"]');
+                        if (btn) {
+                            var sep = btn.nextElementSibling;
+                            if (sep && sep.classList.contains('text-muted')) sep.remove();
+                            btn.remove();
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

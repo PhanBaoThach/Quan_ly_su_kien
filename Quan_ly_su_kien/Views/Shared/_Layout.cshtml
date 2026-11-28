@@ -67,7 +67,7 @@
                         </li>
                     }
 
-                    @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Organizer") || User.IsInRole("Admin")))
+                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Organizer"))
                     {
                         <li class="nav-item">
                             <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Events" asp-action="MyEvents">
@@ -94,11 +94,6 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item py-2" asp-controller="Events" asp-action="MyEvents">
-                                        <i class="fas fa-calendar-alt me-2 text-primary"></i> Quản lý Sự kiện
-                                    </a>
-                                </li>
-                                <li>
                                     <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Users">
                                         <i class="fas fa-users-cog me-2 text-warning"></i> Quản lý Tài khoản
                                     </a>
@@ -106,6 +101,11 @@
                                 <li>
                                     <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Categories">
                                         <i class="fas fa-tags me-2 text-success"></i> Quản lý Danh mục
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Configs">
+                                        <i class="fas fa-sliders-h me-2 text-primary"></i> Quản lý Cấu hình
                                     </a>
                                 </li>
                                 <li>
@@ -122,6 +122,27 @@
                     @if (SignInManager.IsSignedIn(User) && currentUser != null)
                     {
                         var primaryRole = userRoles?.FirstOrDefault() ?? "Thành viên";
+                        <div class="dropdown me-1">
+                            <a class="btn btn-dark border-secondary rounded-circle position-relative d-flex align-items-center justify-content-center" href="#" role="button" id="notifBellDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 38px; height: 38px;">
+                                <i class="fas fa-bell text-warning"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.65rem;">
+                                    0
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0 mt-2" aria-labelledby="notifBellDropdown" style="width: 320px; max-width: 90vw;">
+                                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-dark"><i class="fas fa-bell text-warning me-1"></i> Thông báo</span>
+                                    <a asp-controller="Notifications" asp-action="Index" class="small text-primary text-decoration-none">Xem tất cả</a>
+                                </div>
+                                <div id="notifRecentList" class="overflow-auto" style="max-height: 280px;">
+                                    <div class="p-3 text-center text-muted small">Đang tải thông báo...</div>
+                                </div>
+                                <div class="p-2 border-top text-center bg-light">
+                                    <a asp-controller="Notifications" asp-action="Index" class="btn btn-sm btn-link text-decoration-none small text-primary p-0">Trung tâm thông báo &amp; nhắc lịch &rarr;</a>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="dropdown">
                             <button class="btn btn-dark border-secondary rounded-pill d-flex align-items-center py-1 pe-2 ps-2 dropdown-toggle text-start text-nowrap" type="button" data-bs-toggle="dropdown">
                                 <div class="avatar-circle me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 30px; height: 30px;">
@@ -159,7 +180,12 @@
                                         <i class="fas fa-ticket-alt me-2 text-info"></i> Vé của tôi
                                     </a>
                                 </li>
-                                @if (User.IsInRole("Organizer") || User.IsInRole("Admin"))
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Notifications" asp-action="Index">
+                                        <i class="fas fa-bell me-2 text-warning"></i> Thông báo &amp; Nhắc lịch
+                                    </a>
+                                </li>
+                                @if (User.IsInRole("Organizer"))
                                 {
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Events" asp-action="MyEvents">
@@ -187,6 +213,16 @@
                                     <li>
                                         <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Users">
                                             <i class="fas fa-users me-2 text-secondary"></i> Quản lý tài khoản
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Categories">
+                                            <i class="fas fa-tags me-2 text-secondary"></i> Quản lý danh mục
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-controller="Admin" asp-action="Configs">
+                                            <i class="fas fa-sliders-h me-2 text-secondary"></i> Quản lý cấu hình
                                         </a>
                                     </li>
                                 }
@@ -322,6 +358,40 @@
 
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch('/Notifications/GetUnreadSummary')
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        var badge = document.getElementById('notifBadge');
+                        if (badge && data.unreadCount > 0) {
+                            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                            badge.classList.remove('d-none');
+                        }
+                        var list = document.getElementById('notifRecentList');
+                        if (list) {
+                            if (!data.recent || data.recent.length === 0) {
+                                list.innerHTML = '<div class="p-3 text-center text-muted small">Không có thông báo mới</div>';
+                            } else {
+                                var html = '';
+                                data.recent.forEach(function (n) {
+                                    var bg = !n.isRead ? 'bg-warning bg-opacity-10' : '';
+                                    html += '<a href="/Notifications" class="d-block p-2 text-decoration-none border-bottom ' + bg + ' hover-light">' +
+                                        '<div class="fw-bold text-dark small text-truncate">' + n.title + '</div>' +
+                                        '<div class="text-secondary small text-truncate" style="font-size: 0.78rem;">' + n.message + '</div>' +
+                                        '<div class="text-muted" style="font-size: 0.7rem;"><i class="fas fa-clock me-1"></i>' + n.createdAt + '</div>' +
+                                        '</a>';
+                                });
+                                list.innerHTML = html;
+                            }
+                        }
+                    })
+                    .catch(function () {});
+            });
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

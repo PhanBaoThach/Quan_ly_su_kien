@@ -407,5 +407,126 @@ namespace Quan_ly_su_kien.Controllers
             TempData["SuccessMessage"] = $"Đã xóa danh mục '{category.Name}' thành công!";
             return RedirectToAction("Categories");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Configs()
+        {
+            await EnsureDefaultConfigsAsync();
+            var configs = await _context.SystemConfigs.OrderBy(c => c.Id).ToListAsync();
+            return View("~/Areas/Admin/Views/Home/Configs.cshtml", configs);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveConfigs(Dictionary<string, string> configs)
+        {
+            if (configs != null)
+            {
+                foreach (var item in configs)
+                {
+                    var conf = await _context.SystemConfigs.FirstOrDefaultAsync(c => c.ConfigKey == item.Key);
+                    if (conf != null)
+                    {
+                        conf.ConfigValue = item.Value ?? string.Empty;
+                    }
+                }
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Đã lưu cập nhật tất cả cấu hình hệ thống thành công!";
+            }
+
+            return RedirectToAction(nameof(Configs));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateConfig(SystemConfig model)
+        {
+            if (string.IsNullOrWhiteSpace(model.ConfigKey) || string.IsNullOrWhiteSpace(model.ConfigValue))
+            {
+                TempData["ErrorMessage"] = "Khóa cấu hình và Giá trị không được để trống!";
+                return RedirectToAction(nameof(Configs));
+            }
+
+            model.ConfigKey = model.ConfigKey.Trim();
+            var exists = await _context.SystemConfigs.AnyAsync(c => c.ConfigKey == model.ConfigKey);
+            if (exists)
+            {
+                TempData["ErrorMessage"] = $"Khóa cấu hình '{model.ConfigKey}' đã tồn tại trong hệ thống!";
+                return RedirectToAction(nameof(Configs));
+            }
+
+            _context.SystemConfigs.Add(model);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đã thêm cấu hình mới '{model.ConfigKey}' thành công!";
+            return RedirectToAction(nameof(Configs));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditConfig(SystemConfig model)
+        {
+            var conf = await _context.SystemConfigs.FindAsync(model.Id);
+            if (conf == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy cấu hình yêu cầu.";
+                return RedirectToAction(nameof(Configs));
+            }
+
+            conf.ConfigValue = model.ConfigValue?.Trim() ?? string.Empty;
+            conf.Description = model.Description?.Trim();
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"Đã cập nhật cấu hình '{conf.ConfigKey}' thành công!";
+            return RedirectToAction(nameof(Configs));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfig(int id)
+        {
+            var conf = await _context.SystemConfigs.FindAsync(id);
+            if (conf == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy cấu hình cần xóa.";
+                return RedirectToAction(nameof(Configs));
+            }
+
+            _context.SystemConfigs.Remove(conf);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đã xóa cấu hình '{conf.ConfigKey}' thành công!";
+            return RedirectToAction(nameof(Configs));
+        }
+
+        private async Task EnsureDefaultConfigsAsync()
+        {
+            var defaultConfigs = new List<SystemConfig>
+            {
+                new SystemConfig { ConfigKey = "SiteName", ConfigValue = "EventMana - Nền Tảng Quản Lý Sự Kiện", Description = "Tên thương hiệu và tiêu đề mặc định của hệ thống" },
+                new SystemConfig { ConfigKey = "AdminEmail", ConfigValue = "admin@eventmana.vn", Description = "Địa chỉ email quản trị viên tiếp nhận thông tin hệ thống" },
+                new SystemConfig { ConfigKey = "DefaultPageSize", ConfigValue = "10", Description = "Số lượng bản ghi hiển thị trên mỗi trang phân trang" },
+                new SystemConfig { ConfigKey = "MaxTicketsPerUser", ConfigValue = "5", Description = "Số lượng vé tối đa một tài khoản được phép đăng ký cho mỗi sự kiện" },
+                new SystemConfig { ConfigKey = "AllowRegistration", ConfigValue = "True", Description = "Cho phép người dùng mới đăng ký tài khoản tự do (True/False)" },
+                new SystemConfig { ConfigKey = "MaintenanceMode", ConfigValue = "False", Description = "Kích hoạt chế độ bảo trì toàn bộ hệ thống (True/False)" },
+                new SystemConfig { ConfigKey = "NotificationReminderDays", ConfigValue = "3", Description = "Số ngày trước khi sự kiện bắt đầu để gửi thông báo nhắc lịch" },
+                new SystemConfig { ConfigKey = "SupportHotline", ConfigValue = "1900 6868", Description = "Số tổng đài hotline hỗ trợ kỹ thuật và chăm sóc khách hàng" }
+            };
+
+            var hasChanges = false;
+            foreach (var item in defaultConfigs)
+            {
+                if (!await _context.SystemConfigs.AnyAsync(c => c.ConfigKey == item.ConfigKey))
+                {
+                    _context.SystemConfigs.Add(item);
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

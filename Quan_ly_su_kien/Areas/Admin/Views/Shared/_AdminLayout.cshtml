@@ -153,11 +153,6 @@
                                 <i class="fas fa-calendar-alt"></i> Khám Phá Sự Kiện
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Events/MyEvents">
-                                <i class="fas fa-calendar-check"></i> Quản Lý Sự Kiện
-                            </a>
-                        </li>
 
                         <!-- Dropdown Menu Quản Trị Hệ Thống -->
                         <li class="nav-item dropdown">
@@ -171,13 +166,13 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="/Events/MyEvents">
-                                        <i class="fas fa-calendar-alt text-warning"></i> Quản Lý Sự Kiện
+                                    <a class="dropdown-item" href="/Admin/Categories">
+                                        <i class="fas fa-tags text-success"></i> Quản Lý Danh Mục
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="/Admin/Categories">
-                                        <i class="fas fa-tags text-success"></i> Quản Lý Danh Mục
+                                    <a class="dropdown-item" href="/Admin/Configs">
+                                        <i class="fas fa-sliders-h text-primary"></i> Quản Lý Cấu Hình
                                     </a>
                                 </li>
                                 <li>
@@ -196,6 +191,26 @@
 
                     <!-- Menu Phải: Tài khoản Admin -->
                     <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item dropdown me-2">
+                            <a class="nav-link position-relative text-warning fs-5" href="#" role="button" id="adminNotifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+                                <i class="fas fa-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="adminNotifBadge" style="font-size: 0.65rem;">
+                                    0
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark-custom p-0 shadow-lg" aria-labelledby="adminNotifDropdown" style="width: 320px; max-width: 90vw;">
+                                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-dark">
+                                    <span class="fw-bold text-white"><i class="fas fa-bell text-warning me-1"></i> Thông báo</span>
+                                    <a href="/Notifications" class="small text-info text-decoration-none">Xem tất cả</a>
+                                </div>
+                                <div id="adminNotifList" class="overflow-auto" style="max-height: 280px;">
+                                    <div class="p-3 text-center text-white-50 small">Đang tải thông báo...</div>
+                                </div>
+                                <div class="p-2 border-top text-center bg-dark">
+                                    <a href="/Notifications" class="small text-info text-decoration-none">Trung tâm thông báo &amp; nhắc lịch &rarr;</a>
+                                </div>
+                            </div>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="user-avatar-circle">
@@ -208,6 +223,16 @@
                                 <li>
                                     <a class="dropdown-item" href="/Account/Profile">
                                         <i class="fas fa-user-circle"></i> Hồ sơ cá nhân
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Notifications">
+                                        <i class="fas fa-bell text-warning"></i> Thông báo &amp; Nhắc lịch
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Admin/Configs">
+                                        <i class="fas fa-sliders-h text-primary"></i> Cấu hình hệ thống
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -263,6 +288,37 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/Notifications/GetUnreadSummary')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    var badge = document.getElementById('adminNotifBadge');
+                    if (badge && data.unreadCount > 0) {
+                        badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                        badge.classList.remove('d-none');
+                    }
+                    var list = document.getElementById('adminNotifList');
+                    if (list) {
+                        if (!data.recent || data.recent.length === 0) {
+                            list.innerHTML = '<div class="p-3 text-center text-white-50 small">Không có thông báo mới</div>';
+                        } else {
+                            var html = '';
+                            data.recent.forEach(function (n) {
+                                var bg = !n.isRead ? 'bg-secondary bg-opacity-25' : '';
+                                html += '<a href="/Notifications" class="d-block p-2 text-decoration-none border-bottom border-secondary ' + bg + '">' +
+                                    '<div class="fw-bold text-white small text-truncate">' + n.title + '</div>' +
+                                    '<div class="text-white-50 small text-truncate" style="font-size: 0.78rem;">' + n.message + '</div>' +
+                                    '<div class="text-warning" style="font-size: 0.7rem;"><i class="fas fa-clock me-1"></i>' + n.createdAt + '</div>' +
+                                    '</a>';
+                            });
+                            list.innerHTML = html;
+                        }
+                    }
+                })
+                .catch(function () {});
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
