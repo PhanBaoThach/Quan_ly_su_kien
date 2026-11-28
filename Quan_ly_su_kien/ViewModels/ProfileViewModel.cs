@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Quan_ly_su_kien.Models;
 
 namespace Quan_ly_su_kien.ViewModels
 {
@@ -31,6 +32,9 @@ namespace Quan_ly_su_kien.ViewModels
 
         [Display(Name = "Ngày tham gia")]
         public DateTime CreatedAt { get; set; }
+
+        // Lịch sử tham gia sự kiện (US-11)
+        public List<Registration> EventHistory { get; set; } = new List<Registration>();
     }
 
     public class ChangePasswordViewModel
@@ -52,4 +56,3 @@ namespace Quan_ly_su_kien.ViewModels
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
-

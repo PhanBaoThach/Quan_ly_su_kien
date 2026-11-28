@@ -1,15 +1,24 @@
 @model ProfileViewModel
 @{
     ViewData["Title"] = "Hồ Sơ Cá Nhân";
+    var totalEvents = Model.EventHistory?.Count(r => r.Status != "Cancelled") ?? 0;
+    var checkedInCount = Model.EventHistory?.Count(r => r.CheckInStatus) ?? 0;
 }
 
 <div class="container py-5">
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm p-4 text-center">
-                <div class="avatar-circle mx-auto mb-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 80px; height: 80px; font-size: 2rem;">
-                    @((Model.FullName.Length > 0 ? Model.FullName.Substring(0, 1) : Model.UserName.Substring(0, 1)).ToUpper())
-                </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl" alt="@Model.FullName" class="rounded-circle mx-auto mb-3 shadow object-fit-cover" style="width: 90px; height: 90px;" onerror="this.style.display='none';" />
+                }
+                else
+                {
+                    <div class="avatar-circle mx-auto mb-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 85px; height: 85px; font-size: 2rem;">
+                        @((Model.FullName.Length > 0 ? Model.FullName.Substring(0, 1) : Model.UserName.Substring(0, 1)).ToUpper())
+                    </div>
+                }
                 <h4 class="fw-bold mb-1 text-dark">@Model.FullName</h4>
                 <p class="text-muted small mb-2">@@@Model.UserName</p>
                 <div>
@@ -26,7 +35,19 @@
                         <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fas fa-user me-1"></i> Người Tham Gia</span>
                     }
                 </div>
-                <hr class="my-4">
+
+                <div class="row g-2 mt-3 pt-3 border-top">
+                    <div class="col-6 border-end">
+                        <div class="fw-bold fs-5 text-primary">@totalEvents</div>
+                        <small class="text-muted">Sự kiện đã đặt</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold fs-5 text-success">@checkedInCount</div>
+                        <small class="text-muted">Đã Check-in</small>
+                    </div>
+                </div>
+
+                <hr class="my-3">
                 <div class="text-start small text-muted">
                     <div class="mb-2"><i class="fas fa-envelope text-primary me-2"></i> @Model.Email</div>
                     <div class="mb-2"><i class="fas fa-phone text-primary me-2"></i> @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Chưa cập nhật SĐT" : Model.PhoneNumber)</div>
@@ -36,21 +57,27 @@
         </div>
 
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm p-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
                 <ul class="nav nav-tabs mb-4" id="profileTab" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-pane">
+                        <button class="nav-link active fw-semibold" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-pane" type="button">
                             <i class="fas fa-user-edit me-2"></i>Thông Tin Cá Nhân
                         </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password-pane">
-                            <i class="fas fa-key me-2"></i>Đổi Mật Khẩu
+                        <button class="nav-link fw-semibold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button">
+                            <i class="fas fa-history me-2 text-primary"></i>Lịch Sử Tham Gia (@(Model.EventHistory?.Count ?? 0))
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-semibold" id="password-tab" data-bs-toggle="tab" data-bs-target="#password-pane" type="button">
+                            <i class="fas fa-key me-2 text-warning"></i>Đổi Mật Khẩu
                         </button>
                     </li>
                 </ul>
 
                 <div class="tab-content" id="profileTabContent">
+                    <!-- TAB 1: THÔNG TIN CÁ NHÂN -->
                     <div class="tab-pane fade show active" id="info-pane">
                         <form asp-controller="Account" asp-action="UpdateProfile" method="post">
                             @Html.AntiForgeryToken()
@@ -78,12 +105,93 @@
                                 </div>
                             </div>
 
+                            <div class="mb-4">
+                                <label asp-for="AvatarUrl" class="form-label fw-semibold small text-secondary"></label>
+                                <input asp-for="AvatarUrl" class="form-control" placeholder="https://example.com/avatar.jpg" />
+                                <span asp-validation-for="AvatarUrl" class="text-danger small"></span>
+                            </div>
+
                             <button type="submit" class="btn btn-primary rounded-pill px-4">
                                 <i class="fas fa-save me-2"></i>Lưu Thay Đổi
                             </button>
                         </form>
                     </div>
 
+                    <!-- TAB 2: LỊCH SỬ THAM GIA SỰ KIỆN (US-11) -->
+                    <div class="tab-pane fade" id="history-pane">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark mb-0">Danh sách sự kiện đã đăng ký tham gia</h6>
+                            <a asp-controller="Registrations" asp-action="MyTickets" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <i class="fas fa-qrcode me-1"></i> Xem mã QR vé
+                            </a>
+                        </div>
+
+                        @if (Model.EventHistory != null && Model.EventHistory.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle border rounded-3 mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sự kiện</th>
+                                            <th>Loại vé</th>
+                                            <th class="text-center">SL</th>
+                                            <th>Ngày diễn ra</th>
+                                            <th class="text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var reg in Model.EventHistory)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a asp-controller="Home" asp-action="EventDetail" asp-route-id="@reg.EventId" class="fw-bold text-dark text-decoration-none">
+                                                        @(reg.Event?.Title ?? "Sự kiện #" + reg.EventId)
+                                                    </a>
+                                                    <div class="small text-muted">
+                                                        <i class="fas fa-calendar-day me-1"></i>@(reg.Event?.StartDate.ToString("dd/MM/yyyy HH:mm"))
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border">@(reg.TicketType?.TypeName ?? "Vé thường")</span>
+                                                </td>
+                                                <td class="text-center fw-bold">@reg.Quantity</td>
+                                                <td class="small text-muted">@(reg.Event?.StartDate.ToString("dd/MM/yyyy"))</td>
+                                                <td class="text-center">
+                                                    @if (reg.Status == "Cancelled")
+                                                    {
+                                                        <span class="badge bg-danger rounded-pill px-2 py-1">Đã hủy</span>
+                                                    }
+                                                    else if (reg.CheckInStatus)
+                                                    {
+                                                        <span class="badge bg-success rounded-pill px-2 py-1">
+                                                            <i class="fas fa-check-circle me-1"></i>Đã tham gia
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-info text-dark rounded-pill px-2 py-1">Sắp tham gia</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 bg-light rounded-4">
+                                <i class="fas fa-ticket-alt fa-2x text-muted mb-2"></i>
+                                <div class="fw-bold text-dark">Bạn chưa tham gia sự kiện nào</div>
+                                <p class="text-muted small mb-3">Khám phá các sự kiện đang mở đăng ký ngay hôm nay.</p>
+                                <a asp-controller="Home" asp-action="Events" class="btn btn-primary btn-sm rounded-pill px-4">
+                                    Khám Phá Sự Kiện
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- TAB 3: ĐỔI MẬT KHẨU -->
                     <div class="tab-pane fade" id="password-pane">
                         <form asp-controller="Account" asp-action="ChangePassword" method="post">
                             @Html.AntiForgeryToken()

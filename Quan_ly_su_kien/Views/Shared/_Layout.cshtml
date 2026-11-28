@@ -32,13 +32,13 @@
 </head>
 <body class="d-flex flex-column min-vh-100 bg-light">
     <!-- Header Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm py-2">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                <span class="brand-icon me-2 text-primary bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                    <i class="fas fa-ticket-alt text-primary fs-5"></i>
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark sticky-top shadow-sm py-2">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold d-flex align-items-center text-nowrap me-2" asp-controller="Home" asp-action="Index">
+                <span class="brand-icon me-2 text-primary bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                    <i class="fas fa-ticket-alt text-primary"></i>
                 </span>
-                <span class="fs-4 text-white">Event<span class="text-primary">Mana</span></span>
+                <span class="fs-5 text-white">Event<span class="text-primary">Mana</span></span>
             </a>
 
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
@@ -46,14 +46,14 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarMain">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <ul class="navbar-nav me-auto mb-2 mb-xl-0 small">
                     <li class="nav-item">
-                        <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Index">
+                        <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Home" asp-action="Index">
                             <i class="fas fa-home me-1"></i> Trang Chủ
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Home" asp-action="Events">
+                        <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Home" asp-action="Events">
                             <i class="fas fa-calendar-check me-1"></i> Khám Phá Sự Kiện
                         </a>
                     </li>
@@ -61,7 +61,7 @@
                     @if (SignInManager.IsSignedIn(User))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Registrations" asp-action="MyTickets">
+                            <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Registrations" asp-action="MyTickets">
                                 <i class="fas fa-ticket-alt me-1 text-info"></i> Vé Của Tôi
                             </a>
                         </li>
@@ -70,13 +70,13 @@
                     @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Organizer") || User.IsInRole("Admin")))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Events" asp-action="MyEvents">
+                            <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Events" asp-action="MyEvents">
                                 <i class="fas fa-calendar-alt me-1"></i> Quản Lý Sự Kiện
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 px-3 fw-medium" asp-controller="Reports" asp-action="Index">
-                                <i class="fas fa-chart-bar me-1"></i> Báo Cáo & Thống Kê
+                            <a class="nav-link text-white-50 px-2 fw-medium text-nowrap" asp-controller="Reports" asp-action="Index">
+                                <i class="fas fa-chart-bar me-1"></i> Báo Cáo
                             </a>
                         </li>
                     }
@@ -84,7 +84,7 @@
                     @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
                     {
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-warning fw-semibold px-3" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle text-warning fw-semibold px-2 text-nowrap" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-shield-alt me-1"></i> Quản Trị Hệ Thống
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark shadow border-0">
@@ -108,35 +108,40 @@
                                         <i class="fas fa-tags me-2 text-success"></i> Quản lý Danh mục
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="AuditLogs" asp-action="Index">
+                                        <i class="fas fa-history me-2 text-warning"></i> Nhật ký hoạt động
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     }
                 </ul>
 
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 ms-auto">
                     @if (SignInManager.IsSignedIn(User) && currentUser != null)
                     {
                         var primaryRole = userRoles?.FirstOrDefault() ?? "Thành viên";
                         <div class="dropdown">
-                            <button class="btn btn-dark border-secondary rounded-pill d-flex align-items-center py-1 pe-3 ps-2 dropdown-toggle text-start" type="button" data-bs-toggle="dropdown">
-                                <div class="avatar-circle me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px;">
+                            <button class="btn btn-dark border-secondary rounded-pill d-flex align-items-center py-1 pe-2 ps-2 dropdown-toggle text-start text-nowrap" type="button" data-bs-toggle="dropdown">
+                                <div class="avatar-circle me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 30px; height: 30px;">
                                     @((currentUser.FullName ?? currentUser.UserName ?? "U").Substring(0, 1).ToUpper())
                                 </div>
-                                <div class="d-none d-md-block text-start me-2">
-                                    <div class="fw-semibold text-white small lh-1">@(currentUser.FullName ?? currentUser.UserName)</div>
-                                    <div class="text-white-50" style="font-size: 0.72rem;">@primaryRole</div>
+                                <div class="d-none d-md-block text-start me-2 text-truncate" style="max-width: 135px;">
+                                    <div class="fw-semibold text-white small lh-1 text-truncate">@(currentUser.FullName ?? currentUser.UserName)</div>
+                                    <div class="text-white-50" style="font-size: 0.7rem;">@primaryRole</div>
                                 </div>
                                 @if (User.IsInRole("Admin"))
                                 {
-                                    <span class="badge bg-danger rounded-pill ms-1 px-2 py-1">Admin</span>
+                                    <span class="badge bg-danger rounded-pill px-2 py-1">Admin</span>
                                 }
                                 else if (User.IsInRole("Organizer"))
                                 {
-                                    <span class="badge bg-warning text-dark rounded-pill ms-1 px-2 py-1">BTC</span>
+                                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1">BTC</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-info text-dark rounded-pill ms-1 px-2 py-1">Thành viên</span>
+                                    <span class="badge bg-info text-dark rounded-pill px-2 py-1">Thành viên</span>
                                 }
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2">
@@ -199,10 +204,10 @@
                     }
                     else
                     {
-                        <a class="btn btn-outline-light rounded-pill px-3" asp-controller="Account" asp-action="Login">
+                        <a class="btn btn-outline-light rounded-pill px-3 text-nowrap" asp-controller="Account" asp-action="Login">
                             <i class="fas fa-sign-in-alt me-1"></i> Đăng Nhập
                         </a>
-                        <a class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" asp-controller="Account" asp-action="Register">
+                        <a class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm text-nowrap" asp-controller="Account" asp-action="Register">
                             <i class="fas fa-user-plus me-1"></i> Đăng Ký
                         </a>
                     }
