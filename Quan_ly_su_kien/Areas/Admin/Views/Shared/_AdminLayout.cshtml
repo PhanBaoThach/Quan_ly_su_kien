@@ -130,10 +130,10 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark navbar-eventmana shadow-sm">
             <div class="container-fluid px-lg-4">
-                <!-- Logo EventMana cho Admin -->
-                <a class="navbar-brand" href="/Admin">
-                    <span class="brand-icon"><i class="fas fa-shield-alt text-warning"></i></span>
-                    <span>Event<span class="text-primary">Mana</span> <small class="text-warning fs-6 fw-normal">Admin</small></span>
+                <!-- Logo EventMana nhảy thẳng về trang chủ -->
+                <a class="navbar-brand" href="/">
+                    <span class="brand-icon"><i class="fas fa-ticket-alt"></i></span>
+                    <span>Event<span class="text-primary">Mana</span></span>
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdminContent">
@@ -141,41 +141,53 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarAdminContent">
-                    <!-- Menu Trái dành riêng cho Quản Trị Hệ Thống -->
+                    <!-- Menu Trái -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                         <li class="nav-item">
-                            <a class="nav-link" href="/Admin">
-                                <i class="fas fa-tachometer-alt text-primary"></i> Dashboard
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-home"></i> Trang Chủ
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/Admin/Users">
-                                <i class="fas fa-users-cog text-info"></i> Quản Lý Tài Khoản
+                            <a class="nav-link" href="/Home/Events">
+                                <i class="fas fa-calendar-alt"></i> Khám Phá Sự Kiện
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/Admin/Categories">
-                                <i class="fas fa-tags text-success"></i> Quản Lý Danh Mục
+                            <a class="nav-link" href="/Events/MyEvents">
+                                <i class="fas fa-calendar-check"></i> Quản Lý Sự Kiện
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Guests">
-                                <i class="fas fa-user-tie text-warning"></i> Quản Lý Khách Mời
+
+                        <!-- Dropdown Menu Quản Trị Hệ Thống -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-shield-alt text-warning"></i> Quản Trị Hệ Thống
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Guests/CheckIn">
-                                <i class="fas fa-qrcode text-info"></i> Cổng Check-in QR
-                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark-custom">
+                                <li>
+                                    <a class="dropdown-item" href="/Admin">
+                                        <i class="fas fa-chart-line text-primary"></i> Dashboard Tổng Quan
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Events/MyEvents">
+                                        <i class="fas fa-calendar-alt text-warning"></i> Quản Lý Sự Kiện
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Admin/Categories">
+                                        <i class="fas fa-tags text-success"></i> Quản Lý Danh Mục
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Admin/Users">
+                                        <i class="fas fa-users-cog text-info"></i> Quản Lý Tài Khoản
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
-
-                    <!-- Nút xem giao diện người dùng -->
-                    <div class="d-none d-lg-block me-3">
-                        <a href="/" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 text-light" title="Xem giao diện người dùng">
-                            <i class="fas fa-external-link-alt me-1"></i> Xem Website
-                        </a>
-                    </div>
 
                     <!-- Menu Phải: Tài khoản Admin -->
                     <ul class="navbar-nav ms-auto align-items-center">

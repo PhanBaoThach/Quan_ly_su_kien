@@ -1,8 +1,8 @@
 @model Quan_ly_su_kien.Models.Event
 @{
     ViewData["Title"] = Model.Title + " - Chi Tiết Sự Kiện";
-    var imgUrl = string.IsNullOrWhiteSpace(Model.ImageUrl) 
-        ? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop" 
+    var imgUrl = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop"
         : Model.ImageUrl;
 
     var validRegistrations = Model.Registrations?.Where(r => r.Status != "Cancelled").ToList() ?? new List<Quan_ly_su_kien.Models.Registration>();
@@ -12,6 +12,7 @@
 }
 
 <div class="container py-4">
+    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb mb-0 small">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang Chủ</a></li>
@@ -20,11 +21,12 @@
         </ol>
     </nav>
 
+    <!-- Event Banner & Header Card -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div class="position-relative" style="height: 260px;">
             <img src="@imgUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&auto=format&fit=crop';">
             <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.05) 100%);"></div>
-            
+
             <div class="position-absolute bottom-0 start-0 p-4 text-white w-100 d-flex flex-wrap justify-content-between align-items-end gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-2">
@@ -58,7 +60,10 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Guests" asp-action="CheckIn" asp-route-eventId="@Model.Id" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="fas fa-qrcode me-1"></i> Cổng Check-in QR
+                    </a>
                     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
                         <i class="fas fa-edit me-1 text-primary"></i> Sửa Sự Kiện
                     </a>
@@ -70,6 +75,7 @@
         </div>
     </div>
 
+    <!-- Quick Metrics Bar -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
@@ -129,6 +135,7 @@
         </div>
     </div>
 
+    <!-- Main Content Details Tabs -->
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
             <ul class="nav nav-tabs card-header-tabs" id="eventTab" role="tablist">
@@ -157,6 +164,7 @@
 
         <div class="card-body p-4">
             <div class="tab-content" id="eventTabContent">
+                <!-- TAB 1: TỔNG QUAN & MÔ TẢ -->
                 <div class="tab-pane fade show active" id="overview" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-lg-7">
@@ -224,6 +232,7 @@
                     </div>
                 </div>
 
+                <!-- TAB 2: CÁC LOẠI VÉ -->
                 <div class="tab-pane fade" id="tickets" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark mb-0">Cấu hình các loại vé</h5>
@@ -238,7 +247,7 @@
                             <table class="table table-hover align-middle border rounded-3 mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                         <th>Tên loại vé</th>
+                                        <th>Tên loại vé</th>
                                         <th>Giá vé</th>
                                         <th class="text-center">Số lượng</th>
                                         <th class="text-center">Đã bán</th>
@@ -275,6 +284,7 @@
                     }
                 </div>
 
+                <!-- TAB 3: NGƯỜI ĐĂNG KÝ VÉ -->
                 <div class="tab-pane fade" id="registrations" role="tabpanel">
                     <h5 class="fw-bold text-dark mb-3">Danh sách người đăng ký vé</h5>
 
@@ -347,12 +357,18 @@
                     }
                 </div>
 
+                <!-- TAB 4: KHÁCH MỜI / VIP -->
                 <div class="tab-pane fade" id="guests" role="tabpanel">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-dark mb-0">Danh sách khách mời đặc biệt & Diễn giả</h5>
-                        <a asp-controller="Guests" asp-action="EventGuests" asp-route-eventId="@Model.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold">
-                            <i class="fas fa-user-plus me-1"></i> Quản Lý Danh Sách Khách Mời
-                        </a>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h5 class="fw-bold text-dark mb-0">Danh sách khách mời đặc biệt &amp; Diễn giả</h5>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Guests" asp-action="CheckIn" asp-route-eventId="@Model.Id" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
+                                <i class="fas fa-qrcode me-1"></i> Check-in QR
+                            </a>
+                            <a asp-controller="Guests" asp-action="Index" asp-route-eventId="@Model.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold">
+                                <i class="fas fa-user-plus me-1"></i> Quản Lý Danh Sách Khách Mời
+                            </a>
+                        </div>
                     </div>
 
                     @if (Model.Guests != null && Model.Guests.Any())
@@ -398,7 +414,7 @@
                             <i class="fas fa-id-badge fa-2x text-muted mb-2"></i>
                             <div class="fw-bold text-dark">Chưa có khách mời đặc biệt</div>
                             <p class="text-muted small mb-3">Bạn có thể gửi thư mời riêng cho diễn giả, VIP hoặc đối tác tham dự sự kiện.</p>
-                            <a asp-controller="Guests" asp-action="EventGuests" asp-route-eventId="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            <a asp-controller="Guests" asp-action="Create" asp-route-eventId="@Model.Id" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                                 <i class="fas fa-user-plus me-1"></i> Thêm Khách Mời
                             </a>
                         </div>
