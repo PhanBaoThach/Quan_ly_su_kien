@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Quan_ly_su_kien.Data;
 using Quan_ly_su_kien.Models;
+using Quan_ly_su_kien.Services;
 using Quan_ly_su_kien.ViewModels;
 
 namespace Quan_ly_su_kien.Controllers
@@ -11,17 +14,23 @@ namespace Quan_ly_su_kien.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
+        private readonly IAuditLogService _auditLog;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext context,
+            IAuditLogService auditLog,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _context = context;
+            _auditLog = auditLog;
             _logger = logger;
         }
 
@@ -70,7 +79,7 @@ namespace Quan_ly_su_kien.Controllers
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Người dùng {UserName} đăng nhập thành công.", user.UserName);
+                    await _auditLog.LogAsync(user.Id, "Đăng nhập", $"Tài khoản {user.UserName} đăng nhập thành công vào hệ thống.");
                     TempData["SuccessMessage"] = $"Đăng nhập thành công! Chào mừng {user.FullName ?? user.UserName}.";
                     return await DetermineUserRedirect(user, returnUrl);
                 }
@@ -104,6 +113,7 @@ namespace Quan_ly_su_kien.Controllers
                 if (user != null && user.IsActive)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: true);
+                    await _auditLog.LogAsync(user.Id, "Đăng nhập nhanh", $"Đăng nhập nhanh với vai trò {roleName} ({user.UserName}).");
                     TempData["SuccessMessage"] = $"Đăng nhập thành công với vai trò: {roleName} ({user.FullName})";
 
                     if (roleName == "Admin")
@@ -193,6 +203,7 @@ namespace Quan_ly_su_kien.Controllers
 
                     await _userManager.AddToRoleAsync(user, assignedRole);
                     await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _auditLog.LogAsync(user.Id, "Đăng ký tài khoản", $"Tạo mới tài khoản {user.UserName} với vai trò {assignedRole}.");
 
                     TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Chào mừng bạn gia nhập hệ thống EventMana.";
                     return await DetermineUserRedirect(user, returnUrl);
@@ -218,6 +229,11 @@ namespace Quan_ly_su_kien.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                await _auditLog.LogAsync(user.Id, "Đăng xuất", $"Tài khoản {user.UserName} đã đăng xuất khỏi hệ thống.");
+            }
             await _signInManager.SignOutAsync();
             TempData["SuccessMessage"] = "Bạn đã đăng xuất khỏi hệ thống thành công.";
             return RedirectToAction("Login", "Account", new { area = "" });
@@ -241,6 +257,14 @@ namespace Quan_ly_su_kien.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Lấy lịch sử tham gia sự kiện của người dùng (US-11)
+            var history = await _context.Registrations
+                .Include(r => r.Event)
+                .Include(r => r.TicketType)
+                .Where(r => r.UserId == user.Id)
+                .OrderByDescending(r => r.Id)
+                .ToListAsync();
+
             var model = new ProfileViewModel
             {
                 Id = user.Id,
@@ -250,7 +274,8 @@ namespace Quan_ly_su_kien.Controllers
                 PhoneNumber = user.PhoneNumber,
                 AvatarUrl = user.AvatarUrl,
                 CurrentRole = roles.FirstOrDefault() ?? "Thành viên",
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                EventHistory = history
             };
 
             return View(model);
@@ -269,6 +294,12 @@ namespace Quan_ly_su_kien.Controllers
 
             if (!ModelState.IsValid)
             {
+                model.EventHistory = await _context.Registrations
+                    .Include(r => r.Event)
+                    .Include(r => r.TicketType)
+                    .Where(r => r.UserId == user.Id)
+                    .OrderByDescending(r => r.Id)
+                    .ToListAsync();
                 return View("Profile", model);
             }
 
@@ -279,6 +310,7 @@ namespace Quan_ly_su_kien.Controllers
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
+                await _auditLog.LogAsync(user.Id, "Cập nhật hồ sơ", $"Người dùng {user.UserName} cập nhật thông tin cá nhân (Họ tên: {user.FullName}, SĐT: {user.PhoneNumber}).");
                 TempData["SuccessMessage"] = "Cập nhật thông tin hồ sơ thành công!";
             }
             else
@@ -310,6 +342,7 @@ namespace Quan_ly_su_kien.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.RefreshSignInAsync(user);
+                await _auditLog.LogAsync(user.Id, "Đổi mật khẩu", $"Tài khoản {user.UserName} đã thay đổi mật khẩu thành công.");
                 TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
             }
             else

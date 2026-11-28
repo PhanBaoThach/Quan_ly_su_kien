@@ -1,0 +1,150 @@
+﻿@model IEnumerable<Quan_ly_su_kien.Models.AuditLog>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Nhật Ký Hoạt Động Hệ Thống (Audit Log)";
+    var actions = ViewBag.Actions as List<string> ?? new List<string>();
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+}
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="fas fa-history text-primary me-2"></i>Nhật Ký Hoạt Động Hệ Thống
+            </h2>
+            <p class="text-muted small mb-0">Theo dõi toàn bộ thao tác đăng nhập, đăng ký vé, check-in và thay đổi dữ liệu trên EventMana (@totalItems bản ghi)</p>
+        </div>
+
+        <form asp-action="ClearOldLogs" method="post" onsubmit="return confirm('Xóa toàn bộ nhật ký cũ hơn 30 ngày?');">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="days" value="30" />
+            <button type="submit" class="btn btn-outline-danger rounded-pill px-3 btn-sm fw-semibold">
+                <i class="fas fa-broom me-1"></i> Dọn log cũ (> 30 ngày)
+            </button>
+        </form>
+    </div>
+
+    <!-- Bộ lọc tìm kiếm -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="get" asp-action="Index" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-muted mb-1">Từ khóa (User, chi tiết, IP)</label>
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Nhập tên tài khoản, nội dung, IP..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">Loại hành động</label>
+                    <select name="actionFilter" class="form-select form-select-sm">
+                        <option value="">-- Tất cả hành động --</option>
+                        @foreach (var act in actions)
+                        {
+                            <option value="@act" selected="@(ViewBag.ActionFilter == act)">@act</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">Từ ngày</label>
+                    <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">Đến ngày</label>
+                    <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bảng dữ liệu Audit Log -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 165px;">Thời gian</th>
+                        <th style="width: 210px;">Người thực hiện</th>
+                        <th style="width: 170px;">Hành động</th>
+                        <th>Chi tiết thao tác</th>
+                        <th style="width: 135px;">Địa chỉ IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            string badgeClass = item.Action switch
+                            {
+                                var a when a.Contains("Đăng nhập") => "bg-success-subtle text-success border border-success-subtle",
+                                var a when a.Contains("Đăng ký") => "bg-info-subtle text-info border border-info-subtle",
+                                var a when a.Contains("Mật khẩu") || a.Contains("Khóa") => "bg-warning-subtle text-dark border border-warning-subtle",
+                                var a when a.Contains("Xóa") || a.Contains("Hủy") => "bg-danger-subtle text-danger border border-danger-subtle",
+                                _ => "bg-primary-subtle text-primary border border-primary-subtle"
+                            };
+
+                            <tr>
+                                <td class="small text-muted fw-medium">
+                                    <div>@item.Timestamp.ToString("dd/MM/yyyy")</div>
+                                    <div class="text-dark fw-bold">@item.Timestamp.ToString("HH:mm:ss")</div>
+                                </td>
+                                <td>
+                                    @if (item.User != null)
+                                    {
+                                        <div class="fw-bold text-dark small">@(item.User.FullName ?? item.User.UserName)</div>
+                                        <div class="text-muted" style="font-size: 0.78rem;">@item.User.Email</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Hệ thống / Khách</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @badgeClass rounded-pill px-3 py-1">@item.Action</span>
+                                </td>
+                                <td class="small text-dark">@item.Details</td>
+                                <td><code class="small text-secondary">@(item.IpAddress ?? "N/A")</code></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                                <div>Chưa có dữ liệu nhật ký hoạt động nào phù hợp.</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+                <small class="text-muted">Trang @currentPage / @totalPages</small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-search="@ViewBag.Search"
+                                   asp-route-actionFilter="@ViewBag.ActionFilter"
+                                   asp-route-fromDate="@ViewBag.FromDate"
+                                   asp-route-toDate="@ViewBag.ToDate">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>

@@ -45,7 +45,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // 4. Đăng ký MVC Controllers with Views
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Quan_ly_su_kien.Services.IAuditLogService, Quan_ly_su_kien.Services.AuditLogService>();
 var app = builder.Build();
 
 // 5. Tạm thời tắt khối SeedData để tránh ngắt ứng dụng lúc khởi động
